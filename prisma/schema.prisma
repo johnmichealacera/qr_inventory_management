@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Role {
+  id    String @id @default(cuid())
+  name  String @unique
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  username     String        @unique
+  password     String
+  roleId       String
+  role         Role          @relation(fields: [roleId], references: [id])
+  transactions Transaction[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  items Item[]
+
+  @@map("categories")
+}
+
+model Item {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  categoryId   String
+  reorderLevel Int           @default(10)
+  category     Category      @relation(fields: [categoryId], references: [id])
+  transactions Transaction[]
+  qrCode       QRCode?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("items")
+}
+
+model Transaction {
+  id        String          @id @default(cuid())
+  itemId    String
+  userId    String
+  type      TransactionType
+  quantity  Int
+  notes     String?
+  item      Item            @relation(fields: [itemId], references: [id])
+  user      User            @relation(fields: [userId], references: [id])
+  createdAt DateTime        @default(now())
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  IN
+  OUT
+  RETURN
+}
+
+model QRCode {
+  id     String @id @default(cuid())
+  itemId String @unique
+  value  String @unique
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@map("qr_codes")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String?
+  entityId  String?
+  details   String?
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
