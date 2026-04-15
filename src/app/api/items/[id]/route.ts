@@ -44,7 +44,7 @@ export async function PATCH(
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (!["Admin", "Staff"].includes(session.user.role)) {
+  if (!["Admin", "Custodian"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

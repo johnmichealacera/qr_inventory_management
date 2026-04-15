@@ -1,6 +1,6 @@
 # QR-Code Integrated Inventory Management System
 
-A production-ready inventory management system for the General Supplies Office, built with Next.js, TypeScript, and PostgreSQL. Features QR code generation and scanning for quick item lookups and transaction processing.
+A production-ready inventory management system scoped to the **College of Criminology** (equipment program: Criminology), built with Next.js, TypeScript, and PostgreSQL. QR codes support quick lookups; **borrowers (students)** are recorded on issuance and return; **Admin**, **Custodian**, and **Auditor** roles apply RBAC across the app and API.
 
 ## Tech Stack
 
@@ -15,13 +15,14 @@ A production-ready inventory management system for the General Supplies Office, 
 
 ## Features
 
-- **Authentication & RBAC**: Login with hashed passwords, 3 roles (Admin, Staff, Auditor)
+- **Authentication & RBAC**: Login with hashed passwords; roles **Admin**, **Custodian**, **Auditor**
 - **Dashboard**: Summary cards for total items, low stock alerts, recent transactions
 - **Inventory Management**: Full CRUD for items with categories
 - **QR Code System**: Auto-generated QR codes per item, downloadable as PNG
 - **QR Scanner**: Camera-based scanning with fallback manual entry
+- **Borrowers**: Student/borrower registry (Admin + Custodian); required on **OUT** and **RETURN** transactions
 - **Transactions**: Record IN/OUT/RETURN movements; stock computed from transaction history
-- **Reports**: Filterable transaction reports with date range, item, and type filters
+- **Reports**: Filterable reports (date range, item, type, borrower) and **CSV export**
 - **Audit Logs**: Track all user actions with timestamps
 - **User Management**: Admin-only user CRUD with role assignment
 - **REST API**: Full API layer ready for mobile app integration
@@ -80,7 +81,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | Role    | Username | Password    |
 |---------|----------|-------------|
 | Admin   | admin    | password123 |
-| Staff   | staff    | password123 |
+| Custodian | custodian | password123 |
 | Auditor | auditor  | password123 |
 
 ## Project Structure
@@ -95,7 +96,8 @@ src/
 │   │   ├── categories/     # Category management
 │   │   ├── scan/           # QR scanner page
 │   │   ├── transactions/   # Transaction records
-│   │   ├── reports/        # Filtered reports
+│   │   ├── borrowers/      # Borrower registry (Admin/Custodian)
+│   │   ├── reports/        # Filtered reports + CSV export
 │   │   ├── audit-logs/     # Audit trail
 │   │   └── users/          # User management (Admin)
 │   └── api/                # REST API routes
@@ -123,6 +125,7 @@ src/
 │   ├── items.ts            # Item CRUD + stock calculation
 │   ├── categories.ts       # Category CRUD
 │   ├── transactions.ts     # Transaction processing
+│   ├── borrowers.ts        # Borrower CRUD
 │   ├── dashboard.ts        # Dashboard statistics
 │   ├── users.ts            # User management
 │   └── audit-logs.ts       # Audit log queries
@@ -139,14 +142,15 @@ prisma/
 | Method | Endpoint              | Description           | Auth Required |
 |--------|----------------------|-----------------------|--------------|
 | GET    | /api/items           | List items            | Yes          |
-| POST   | /api/items           | Create item           | Admin/Staff  |
+| POST   | /api/items           | Create item           | Admin/Custodian |
 | GET    | /api/items/:id       | Get item details      | Yes          |
-| PATCH  | /api/items/:id       | Update item           | Admin/Staff  |
+| PATCH  | /api/items/:id       | Update item           | Admin/Custodian |
 | DELETE | /api/items/:id       | Delete item           | Admin        |
 | GET    | /api/categories      | List categories       | Yes          |
-| POST   | /api/categories      | Create category       | Admin/Staff  |
+| POST   | /api/categories      | Create category       | Admin/Custodian |
 | GET    | /api/transactions    | List transactions     | Yes          |
-| POST   | /api/transactions    | Create transaction    | Admin/Staff  |
+| POST   | /api/transactions    | Create transaction    | Admin/Custodian |
+| GET    | /api/reports/export  | CSV export (filtered) | Admin/Custodian/Auditor |
 | GET    | /api/scan?value=...  | Lookup item by QR     | Yes          |
 
 ## Database Scripts

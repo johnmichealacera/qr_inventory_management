@@ -30,6 +30,20 @@ model User {
   @@map("users")
 }
 
+/// Student / borrower for issuance and return tracking (College of Criminology)
+model Borrower {
+  id               String        @id @default(cuid())
+  fullName         String
+  studentId        String        @unique
+  programSection   String?
+  contactPhone     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  transactions     Transaction[]
+
+  @@map("borrowers")
+}
+
 model Category {
   id    String @id @default(cuid())
   name  String @unique
@@ -38,31 +52,35 @@ model Category {
   @@map("categories")
 }
 
+/// Inventory item; equipmentProgram defaults to CRIMINOLOGY per study scope
 model Item {
-  id           String        @id @default(cuid())
-  name         String
-  description  String?
-  categoryId   String
-  reorderLevel Int           @default(10)
-  category     Category      @relation(fields: [categoryId], references: [id])
-  transactions Transaction[]
-  qrCode       QRCode?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  name               String
+  description        String?
+  categoryId         String
+  reorderLevel       Int           @default(10)
+  equipmentProgram   String        @default("CRIMINOLOGY")
+  category           Category      @relation(fields: [categoryId], references: [id])
+  transactions       Transaction[]
+  qrCode             QRCode?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   @@map("items")
 }
 
 model Transaction {
-  id        String          @id @default(cuid())
-  itemId    String
-  userId    String
-  type      TransactionType
-  quantity  Int
-  notes     String?
-  item      Item            @relation(fields: [itemId], references: [id])
-  user      User            @relation(fields: [userId], references: [id])
-  createdAt DateTime        @default(now())
+  id         String          @id @default(cuid())
+  itemId     String
+  userId     String
+  borrowerId String?
+  type       TransactionType
+  quantity   Int
+  notes      String?
+  item       Item            @relation(fields: [itemId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+  borrower   Borrower?       @relation(fields: [borrowerId], references: [id])
+  createdAt  DateTime        @default(now())
 
   @@map("transactions")
 }

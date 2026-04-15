@@ -16,10 +16,10 @@ async function main() {
     create: { name: "Admin" },
   });
 
-  const staffRole = await prisma.role.upsert({
-    where: { name: "Staff" },
+  const custodianRole = await prisma.role.upsert({
+    where: { name: "Custodian" },
     update: {},
-    create: { name: "Staff" },
+    create: { name: "Custodian" },
   });
 
   const auditorRole = await prisma.role.upsert({
@@ -28,7 +28,17 @@ async function main() {
     create: { name: "Auditor" },
   });
 
-  console.log("Roles created:", { adminRole, staffRole, auditorRole });
+  const legacyStaffRole = await prisma.role.findUnique({ where: { name: "Staff" } });
+  if (legacyStaffRole) {
+    await prisma.user.updateMany({
+      where: { roleId: legacyStaffRole.id },
+      data: { roleId: custodianRole.id },
+    });
+    await prisma.role.delete({ where: { id: legacyStaffRole.id } });
+    console.log("Migrated legacy Staff role to Custodian");
+  }
+
+  console.log("Roles ready:", { adminRole, custodianRole, auditorRole });
 
   const hashedPassword = await bcrypt.hash("password123", 12);
 
@@ -43,14 +53,32 @@ async function main() {
     },
   });
 
-  const staff = await prisma.user.upsert({
-    where: { username: "staff" },
-    update: {},
+  const existingStaffUser = await prisma.user.findUnique({ where: { username: "staff" } });
+  const existingCustodianUser = await prisma.user.findUnique({ where: { username: "custodian" } });
+
+  if (existingStaffUser && !existingCustodianUser) {
+    await prisma.user.update({
+      where: { id: existingStaffUser.id },
+      data: {
+        username: "custodian",
+        name: "Equipment Custodian",
+        roleId: custodianRole.id,
+      },
+    });
+    console.log("Renamed legacy user staff → custodian");
+  } else if (existingStaffUser && existingCustodianUser) {
+    await prisma.user.delete({ where: { id: existingStaffUser.id } });
+    console.log("Removed duplicate legacy staff user (custodian already exists)");
+  }
+
+  const custodian = await prisma.user.upsert({
+    where: { username: "custodian" },
+    update: { roleId: custodianRole.id },
     create: {
-      name: "Staff User",
-      username: "staff",
+      name: "Equipment Custodian",
+      username: "custodian",
       password: hashedPassword,
-      roleId: staffRole.id,
+      roleId: custodianRole.id,
     },
   });
 
@@ -65,18 +93,17 @@ async function main() {
     },
   });
 
-  console.log("Users created:", {
+  console.log("Users:", {
     admin: admin.username,
-    staff: staff.username,
+    custodian: custodian.username,
     auditor: auditor.username,
   });
 
   const categories = [
-    "Office Supplies",
-    "Cleaning Supplies",
-    "Electronics",
-    "Furniture",
-    "Paper Products",
+    "Criminology — Uniforms & Gear",
+    "Criminology — Training Equipment",
+    "Criminology — Forensic Supplies",
+    "Criminology — Documentation",
   ];
 
   for (const name of categories) {
@@ -87,25 +114,38 @@ async function main() {
     });
   }
 
-  console.log("Categories created:", categories);
+  console.log("Categories:", categories);
 
-  const officeSupplies = await prisma.category.findUnique({
-    where: { name: "Office Supplies" },
+  const uniformCat = await prisma.category.findUnique({
+    where: { name: "Criminology — Uniforms & Gear" },
   });
-  const paperProducts = await prisma.category.findUnique({
-    where: { name: "Paper Products" },
+  const trainingCat = await prisma.category.findUnique({
+    where: { name: "Criminology — Training Equipment" },
   });
-  const electronics = await prisma.category.findUnique({
-    where: { name: "Electronics" },
+  const forensicCat = await prisma.category.findUnique({
+    where: { name: "Criminology — Forensic Supplies" },
   });
 
-  if (officeSupplies && paperProducts && electronics) {
+  if (uniformCat && trainingCat && forensicCat) {
     const sampleItems = [
-      { name: "Ballpoint Pen (Blue)", description: "Standard blue ballpoint pen", categoryId: officeSupplies.id, reorderLevel: 50 },
-      { name: "Stapler", description: "Heavy-duty desk stapler", categoryId: officeSupplies.id, reorderLevel: 10 },
-      { name: "A4 Bond Paper", description: "Short bond paper, 80gsm, 500 sheets per ream", categoryId: paperProducts.id, reorderLevel: 20 },
-      { name: "Legal Pad", description: "Yellow ruled legal pad", categoryId: paperProducts.id, reorderLevel: 30 },
-      { name: "USB Flash Drive 32GB", description: "USB 3.0 flash drive", categoryId: electronics.id, reorderLevel: 5 },
+      {
+        name: "Tactical belt (standard issue)",
+        description: "College of Criminology equipment room",
+        categoryId: uniformCat.id,
+        reorderLevel: 15,
+      },
+      {
+        name: "Evidence collection kit",
+        description: "Sealed consumables for lab practicum",
+        categoryId: forensicCat.id,
+        reorderLevel: 8,
+      },
+      {
+        name: "Handcuff training set (practice)",
+        description: "Drill hall issuance",
+        categoryId: trainingCat.id,
+        reorderLevel: 6,
+      },
     ];
 
     for (const itemData of sampleItems) {
@@ -128,8 +168,8 @@ async function main() {
             itemId: item.id,
             userId: admin.id,
             type: "IN",
-            quantity: 100,
-            notes: "Initial stock",
+            quantity: 50,
+            notes: "Initial stock (seed)",
           },
         });
 
@@ -138,11 +178,39 @@ async function main() {
     }
   }
 
+  const borrowerSeeds = [
+    {
+      fullName: "Ana Maria Santos",
+      studentId: "CRIM-2024-001",
+      programSection: "BSCrim 4A",
+      contactPhone: "+639170000001",
+    },
+    {
+      fullName: "Juan Dela Cruz",
+      studentId: "CRIM-2024-014",
+      programSection: "BSCrim 3B",
+      contactPhone: "+639170000002",
+    },
+  ];
+
+  for (const b of borrowerSeeds) {
+    await prisma.borrower.upsert({
+      where: { studentId: b.studentId },
+      update: {
+        fullName: b.fullName,
+        programSection: b.programSection,
+        contactPhone: b.contactPhone,
+      },
+      create: b,
+    });
+  }
+  console.log("Borrowers (sample):", borrowerSeeds.map((b) => b.studentId).join(", "));
+
   console.log("Seed completed successfully!");
   console.log("\nDefault login credentials:");
-  console.log("  Admin:   admin / password123");
-  console.log("  Staff:   staff / password123");
-  console.log("  Auditor: auditor / password123");
+  console.log("  Admin:     admin / password123");
+  console.log("  Custodian: custodian / password123");
+  console.log("  Auditor:   auditor / password123");
 }
 
 main()

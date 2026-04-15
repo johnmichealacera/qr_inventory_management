@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { createItemSchema } from "@/lib/validations";
 import { getItemStock } from "@/server/items";
 import { createAuditLog } from "@/lib/audit";
+import { EQUIPMENT_PROGRAM_CRIMINOLOGY } from "@/lib/constants";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -15,7 +16,9 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search") ?? undefined;
   const categoryId = searchParams.get("categoryId") ?? undefined;
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {
+    equipmentProgram: EQUIPMENT_PROGRAM_CRIMINOLOGY,
+  };
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
@@ -49,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!["Admin", "Staff"].includes(session.user.role)) {
+  if (!["Admin", "Custodian"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -62,7 +65,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const item = await db.item.create({ data: parsed.data });
+  const item = await db.item.create({
+    data: { ...parsed.data, equipmentProgram: EQUIPMENT_PROGRAM_CRIMINOLOGY },
+  });
 
   await db.qRCode.create({
     data: { itemId: item.id, value: `INV-${item.id}` },

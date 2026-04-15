@@ -12,6 +12,7 @@ export async function getDashboardStats() {
         include: {
           item: { select: { id: true, name: true } },
           user: { select: { id: true, name: true } },
+          borrower: { select: { id: true, fullName: true, studentId: true } },
         },
         orderBy: { createdAt: "desc" },
         take: 5,

@@ -14,7 +14,7 @@ export async function getCategories() {
 }
 
 export async function createCategory(data: unknown) {
-  const session = await requireRole(["Admin", "Staff"]);
+  const session = await requireRole(["Admin", "Custodian"]);
   const parsed = categorySchema.parse(data);
 
   const existing = await db.category.findUnique({
@@ -38,7 +38,7 @@ export async function createCategory(data: unknown) {
 }
 
 export async function updateCategory(id: string, data: unknown) {
-  const session = await requireRole(["Admin", "Staff"]);
+  const session = await requireRole(["Admin", "Custodian"]);
   const parsed = categorySchema.parse(data);
 
   const category = await db.category.update({

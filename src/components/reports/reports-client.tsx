@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,9 +26,10 @@ import {
 import { Pagination } from "@/components/layout/pagination";
 import { getTransactions } from "@/server/transactions";
 import { getItems } from "@/server/items";
+import { getBorrowers } from "@/server/borrowers";
 import { format } from "date-fns";
 import { TRANSACTION_TYPE_LABELS } from "@/lib/constants";
-import { Filter, Loader2, X } from "lucide-react";
+import { Download, Filter, Loader2, X } from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -36,11 +39,18 @@ interface Transaction {
   createdAt: Date;
   item: { id: string; name: string };
   user: { id: string; name: string };
+  borrower: { id: string; fullName: string; studentId: string } | null;
 }
 
 interface Item {
   id: string;
   name: string;
+}
+
+interface BorrowerRow {
+  id: string;
+  fullName: string;
+  studentId: string;
 }
 
 const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -52,6 +62,7 @@ const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" |
 export function ReportsClient() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [borrowers, setBorrowers] = useState<BorrowerRow[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -61,6 +72,18 @@ export function ReportsClient() {
   const [endDate, setEndDate] = useState("");
   const [itemId, setItemId] = useState("");
   const [type, setType] = useState("");
+  const [borrowerId, setBorrowerId] = useState("");
+
+  const exportHref = useMemo(() => {
+    const p = new URLSearchParams();
+    if (startDate) p.set("startDate", startDate);
+    if (endDate) p.set("endDate", endDate);
+    if (itemId) p.set("itemId", itemId);
+    if (type) p.set("type", type);
+    if (borrowerId) p.set("borrowerId", borrowerId);
+    const q = p.toString();
+    return q ? `/api/reports/export?${q}` : "/api/reports/export";
+  }, [startDate, endDate, itemId, type, borrowerId]);
 
   async function loadData(p: number = 1) {
     setIsLoading(true);
@@ -72,6 +95,7 @@ export function ReportsClient() {
         endDate: endDate || undefined,
         itemId: itemId || undefined,
         type: type || undefined,
+        borrowerId: borrowerId || undefined,
       });
       setTransactions(result.transactions);
       setTotalPages(result.totalPages);
@@ -83,7 +107,9 @@ export function ReportsClient() {
   }
 
   useEffect(() => {
-    Promise.all([loadData(), getItems().then((all) => setItems(all.map((i) => ({ id: i.id, name: i.name }))))]);
+    void loadData();
+    void getItems().then((all) => setItems(all.map((i) => ({ id: i.id, name: i.name }))));
+    void getBorrowers().then(setBorrowers);
   }, []);
 
   function handleFilter() {
@@ -95,6 +121,7 @@ export function ReportsClient() {
     setEndDate("");
     setItemId("");
     setType("");
+    setBorrowerId("");
     setTimeout(() => loadData(1), 0);
   }
 
@@ -108,7 +135,7 @@ export function ReportsClient() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <div className="space-y-2">
               <Label>Start Date</Label>
               <Input
@@ -153,13 +180,39 @@ export function ReportsClient() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Borrower</Label>
+              <Select
+                value={borrowerId || "__all__"}
+                onValueChange={(val) => setBorrowerId(val === "__all__" ? "" : (val ?? ""))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All borrowers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All borrowers</SelectItem>
+                  {borrowers.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.fullName} ({b.studentId})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button onClick={handleFilter}>Apply Filters</Button>
             <Button variant="outline" onClick={handleClearFilters}>
               <X className="mr-2 h-4 w-4" />
               Clear
             </Button>
+            <Link
+              href={exportHref}
+              className={cn(buttonVariants({ variant: "outline" }), "inline-flex")}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -186,6 +239,7 @@ export function ReportsClient() {
                     <TableHead>Item</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Quantity</TableHead>
+                    <TableHead>Borrower</TableHead>
                     <TableHead>Notes</TableHead>
                     <TableHead>By</TableHead>
                     <TableHead>Date</TableHead>
@@ -201,6 +255,11 @@ export function ReportsClient() {
                         </Badge>
                       </TableCell>
                       <TableCell>{tx.quantity}</TableCell>
+                      <TableCell className="max-w-[180px] truncate text-muted-foreground text-sm">
+                        {tx.borrower
+                          ? `${tx.borrower.fullName} (${tx.borrower.studentId})`
+                          : "—"}
+                      </TableCell>
                       <TableCell className="max-w-[200px] truncate text-muted-foreground">
                         {tx.notes ?? "—"}
                       </TableCell>

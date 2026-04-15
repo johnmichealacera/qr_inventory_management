@@ -8,11 +8,21 @@ import { getItemStock } from "@/server/items";
 import { revalidatePath } from "next/cache";
 
 export async function createTransaction(data: unknown) {
-  const session = await requireRole(["Admin", "Staff"]);
+  const session = await requireRole(["Admin", "Custodian"]);
   const parsed = transactionSchema.parse(data);
 
   const item = await db.item.findUnique({ where: { id: parsed.itemId } });
   if (!item) throw new Error("Item not found");
+
+  if (parsed.type === "OUT" || parsed.type === "RETURN") {
+    if (!parsed.borrowerId?.trim()) {
+      throw new Error("Borrower (student) is required for issuance and return");
+    }
+    const borrower = await db.borrower.findUnique({
+      where: { id: parsed.borrowerId.trim() },
+    });
+    if (!borrower) throw new Error("Borrower not found");
+  }
 
   if (parsed.type === "OUT") {
     const currentStock = await getItemStock(parsed.itemId);
@@ -28,10 +38,13 @@ export async function createTransaction(data: unknown) {
       type: parsed.type,
       quantity: parsed.quantity,
       notes: parsed.notes,
+      borrowerId:
+        parsed.type === "IN" ? null : parsed.borrowerId?.trim() ?? null,
     },
     include: {
       item: true,
       user: { select: { id: true, name: true } },
+      borrower: { select: { id: true, fullName: true, studentId: true } },
     },
   });
 
@@ -40,7 +53,7 @@ export async function createTransaction(data: unknown) {
     action: `TRANSACTION_${parsed.type}`,
     entity: "Transaction",
     entityId: transaction.id,
-    details: `${parsed.type} ${parsed.quantity} of ${item.name}`,
+    details: `${parsed.type} ${parsed.quantity} of ${item.name}${transaction.borrower ? ` → ${transaction.borrower.fullName}` : ""}`,
   });
 
   revalidatePath("/dashboard");
@@ -55,9 +68,12 @@ export async function getTransactions(params?: {
   limit?: number;
   itemId?: string;
   type?: string;
+  borrowerId?: string;
   startDate?: string;
   endDate?: string;
 }) {
+  await requireRole(["Admin", "Custodian", "Auditor"]);
+
   const page = params?.page ?? 1;
   const limit = params?.limit ?? 20;
   const skip = (page - 1) * limit;
@@ -66,6 +82,7 @@ export async function getTransactions(params?: {
 
   if (params?.itemId) where.itemId = params.itemId;
   if (params?.type) where.type = params.type;
+  if (params?.borrowerId) where.borrowerId = params.borrowerId;
 
   if (params?.startDate || params?.endDate) {
     const createdAt: Record<string, Date> = {};
@@ -84,6 +101,7 @@ export async function getTransactions(params?: {
       include: {
         item: { select: { id: true, name: true } },
         user: { select: { id: true, name: true } },
+        borrower: { select: { id: true, fullName: true, studentId: true } },
       },
       orderBy: { createdAt: "desc" },
       skip,
@@ -105,6 +123,7 @@ export async function getRecentTransactions(limit = 5) {
     include: {
       item: { select: { id: true, name: true } },
       user: { select: { id: true, name: true } },
+      borrower: { select: { id: true, fullName: true, studentId: true } },
     },
     orderBy: { createdAt: "desc" },
     take: limit,

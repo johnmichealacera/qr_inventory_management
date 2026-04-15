@@ -1,6 +1,6 @@
 export const ROLES = {
   ADMIN: "Admin",
-  STAFF: "Staff",
+  CUSTODIAN: "Custodian",
   AUDITOR: "Auditor",
 } as const;
 
@@ -17,5 +17,8 @@ export const TRANSACTION_TYPE_LABELS: Record<string, string> = {
   OUT: "Issued",
   RETURN: "Returned",
 };
+
+/** Study scope: inventory limited to College of Criminology equipment */
+export const EQUIPMENT_PROGRAM_CRIMINOLOGY = "CRIMINOLOGY" as const;
 
 export const PAGE_SIZE = 20;

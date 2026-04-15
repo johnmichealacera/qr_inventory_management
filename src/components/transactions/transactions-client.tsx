@@ -24,11 +24,13 @@ import { TransactionForm } from "@/components/transactions/transaction-form";
 import { Pagination } from "@/components/layout/pagination";
 import { getTransactions } from "@/server/transactions";
 import { getItems } from "@/server/items";
+import { getBorrowers } from "@/server/borrowers";
 import { createTransaction } from "@/server/transactions";
 import { format } from "date-fns";
 import { TRANSACTION_TYPE_LABELS } from "@/lib/constants";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import type { TransactionInput } from "@/lib/validations";
 
 interface Item {
@@ -44,6 +46,7 @@ interface Transaction {
   createdAt: Date;
   item: { id: string; name: string };
   user: { id: string; name: string };
+  borrower: { id: string; fullName: string; studentId: string } | null;
 }
 
 const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -54,8 +57,13 @@ const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" |
 
 export function TransactionsClient() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const canRecord = session?.user?.role === "Admin" || session?.user?.role === "Custodian";
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [borrowers, setBorrowers] = useState<
+    { id: string; fullName: string; studentId: string }[]
+  >([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,14 +72,18 @@ export function TransactionsClient() {
   async function loadData(p: number = page) {
     setIsLoading(true);
     try {
-      const [txResult, allItems] = await Promise.all([
+      const [txResult, allItems, allBorrowers] = await Promise.all([
         getTransactions({ page: p, limit: 20 }),
         getItems(),
+        getBorrowers(),
       ]);
       setTransactions(txResult.transactions);
       setTotalPages(txResult.totalPages);
       setPage(txResult.page);
       setItems(allItems.map((i) => ({ id: i.id, name: i.name })));
+      setBorrowers(
+        allBorrowers.map((b) => ({ id: b.id, fullName: b.fullName, studentId: b.studentId }))
+      );
     } finally {
       setIsLoading(false);
     }
@@ -102,25 +114,27 @@ export function TransactionsClient() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger
-            render={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Transaction
-              </Button>
-            }
-          />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Record Transaction</DialogTitle>
-              <DialogDescription>Create a new inventory transaction</DialogDescription>
-            </DialogHeader>
-            <TransactionForm items={items} onSubmit={handleCreate} />
-          </DialogContent>
-        </Dialog>
-      </div>
+      {canRecord && (
+        <div className="flex justify-end">
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger
+              render={
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Transaction
+                </Button>
+              }
+            />
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Record Transaction</DialogTitle>
+                <DialogDescription>Create a new inventory transaction</DialogDescription>
+              </DialogHeader>
+              <TransactionForm items={items} borrowers={borrowers} onSubmit={handleCreate} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
 
       {transactions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12">
@@ -135,6 +149,7 @@ export function TransactionsClient() {
                   <TableHead>Item</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead>Borrower</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead>By</TableHead>
                   <TableHead>Date</TableHead>
@@ -150,6 +165,11 @@ export function TransactionsClient() {
                       </Badge>
                     </TableCell>
                     <TableCell>{tx.quantity}</TableCell>
+                    <TableCell className="max-w-[140px] truncate text-muted-foreground text-sm">
+                      {tx.borrower
+                        ? `${tx.borrower.fullName} (${tx.borrower.studentId})`
+                        : "—"}
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground">
                       {tx.notes ?? "—"}
                     </TableCell>

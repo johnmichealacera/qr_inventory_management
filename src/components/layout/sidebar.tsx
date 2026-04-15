@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   QrCode,
+  UserRound,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,7 +29,13 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "Categories", href: "/categories", icon: FolderOpen },
-  { name: "QR Scanner", href: "/scan", icon: ScanLine },
+  {
+    name: "Borrowers",
+    href: "/borrowers",
+    icon: UserRound,
+    roles: ["Admin", "Custodian"],
+  },
+  { name: "QR Scanner", href: "/scan", icon: ScanLine, roles: ["Admin", "Custodian"] },
   { name: "Transactions", href: "/transactions", icon: ArrowLeftRight },
   { name: "Reports", href: "/reports", icon: FileBarChart },
   { name: "Audit Logs", href: "/audit-logs", icon: Shield, roles: ["Admin", "Auditor"] },

@@ -148,7 +148,7 @@ export function UsersClient() {
                             : "outline"
                       }
                     >
-                      {user.role.name}
+                      {user.role.name === "Staff" ? "Custodian" : user.role.name}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">

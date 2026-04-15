@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createTransaction } from "@/server/transactions";
+import { getBorrowers } from "@/server/borrowers";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine, RotateCcw, Loader2, X } from "lucide-react";
 
@@ -19,6 +27,12 @@ interface ScannedItem {
   reorderLevel: number;
   currentStock: number;
   category: { name: string };
+}
+
+interface BorrowerOpt {
+  id: string;
+  fullName: string;
+  studentId: string;
 }
 
 interface ScanResultProps {
@@ -37,10 +51,20 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
   const [selectedType, setSelectedType] = useState<"IN" | "OUT" | "RETURN" | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
+  const [borrowerId, setBorrowerId] = useState("");
+  const [borrowers, setBorrowers] = useState<BorrowerOpt[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    getBorrowers().then(setBorrowers).catch(() => setBorrowers([]));
+  }, []);
 
   async function handleSubmit() {
     if (!selectedType) return;
+    if ((selectedType === "OUT" || selectedType === "RETURN") && !borrowerId) {
+      toast.error("Select a borrower (student) for issuance or return");
+      return;
+    }
     setIsSubmitting(true);
 
     try {
@@ -49,6 +73,8 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
         type: selectedType,
         quantity,
         notes: notes || undefined,
+        borrowerId:
+          selectedType === "IN" ? undefined : borrowerId || undefined,
       });
       toast.success(
         `${selectedType === "IN" ? "Received" : selectedType === "OUT" ? "Issued" : "Returned"} ${quantity} of ${item.name}`
@@ -68,7 +94,7 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-base">
-          <span>Scanned Item</span>
+          <span>Scanned item</span>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClear}>
             <X className="h-4 w-4" />
           </Button>
@@ -89,7 +115,7 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
         </div>
 
         <div>
-          <Label className="text-sm font-medium">Select Action</Label>
+          <Label className="text-sm font-medium">Select action</Label>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {transactionActions.map((action) => (
               <Button
@@ -107,6 +133,28 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
 
         {selectedType && (
           <div className="space-y-4">
+            {(selectedType === "OUT" || selectedType === "RETURN") && (
+              <div className="space-y-2">
+                <Label>Borrower (student)</Label>
+                <Select value={borrowerId} onValueChange={(val) => setBorrowerId(val ?? "")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select registered borrower" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {borrowers.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.fullName} ({b.studentId})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {borrowers.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Register borrowers under Borrowers (students) first.
+                  </p>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
               <Input

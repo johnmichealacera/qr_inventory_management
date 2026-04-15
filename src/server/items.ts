@@ -4,11 +4,14 @@ import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
 import { requireAuth, requireRole } from "@/lib/auth";
 import { createItemSchema, updateItemSchema } from "@/lib/validations";
+import { EQUIPMENT_PROGRAM_CRIMINOLOGY } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 
 export async function getItems(search?: string, categoryId?: string) {
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {
+    equipmentProgram: EQUIPMENT_PROGRAM_CRIMINOLOGY,
+  };
 
   if (search) {
     where.OR = [
@@ -39,7 +42,10 @@ export async function getItemById(id: string) {
       category: true,
       qrCode: true,
       transactions: {
-        include: { user: { select: { id: true, name: true } } },
+        include: {
+          user: { select: { id: true, name: true } },
+          borrower: { select: { id: true, fullName: true, studentId: true } },
+        },
         orderBy: { createdAt: "desc" },
         take: 10,
       },
@@ -67,7 +73,7 @@ export async function getItemStock(itemId: string): Promise<number> {
 }
 
 export async function createItem(data: unknown) {
-  const session = await requireRole(["Admin", "Staff"]);
+  const session = await requireRole(["Admin", "Custodian"]);
   const parsed = createItemSchema.parse(data);
 
   const item = await db.item.create({
@@ -76,6 +82,7 @@ export async function createItem(data: unknown) {
       description: parsed.description,
       categoryId: parsed.categoryId,
       reorderLevel: parsed.reorderLevel,
+      equipmentProgram: EQUIPMENT_PROGRAM_CRIMINOLOGY,
     },
   });
 
@@ -101,12 +108,12 @@ export async function createItem(data: unknown) {
 }
 
 export async function updateItem(id: string, data: unknown) {
-  const session = await requireRole(["Admin", "Staff"]);
+  const session = await requireRole(["Admin", "Custodian"]);
   const parsed = updateItemSchema.parse(data);
 
   const item = await db.item.update({
     where: { id },
-    data: parsed,
+    data: { ...parsed, equipmentProgram: EQUIPMENT_PROGRAM_CRIMINOLOGY },
   });
 
   await createAuditLog({
@@ -154,6 +161,7 @@ export async function getItemByQRValue(qrValue: string) {
   });
 
   if (!qrCode) return null;
+  if (qrCode.item.equipmentProgram !== EQUIPMENT_PROGRAM_CRIMINOLOGY) return null;
 
   const stock = await getItemStock(qrCode.itemId);
   return { ...qrCode.item, currentStock: stock };

@@ -16,12 +16,14 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Number(searchParams.get("limit") ?? "20"), 100);
   const itemId = searchParams.get("itemId") ?? undefined;
   const type = searchParams.get("type") ?? undefined;
+  const borrowerId = searchParams.get("borrowerId") ?? undefined;
   const startDate = searchParams.get("startDate") ?? undefined;
   const endDate = searchParams.get("endDate") ?? undefined;
 
   const where: Record<string, unknown> = {};
   if (itemId) where.itemId = itemId;
   if (type) where.type = type;
+  if (borrowerId) where.borrowerId = borrowerId;
 
   if (startDate || endDate) {
     const createdAt: Record<string, Date> = {};
@@ -42,6 +44,7 @@ export async function GET(req: NextRequest) {
       include: {
         item: { select: { id: true, name: true } },
         user: { select: { id: true, name: true } },
+        borrower: { select: { id: true, fullName: true, studentId: true } },
       },
       orderBy: { createdAt: "desc" },
       skip,
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (!["Admin", "Staff"].includes(session.user.role)) {
+  if (!["Admin", "Custodian"].includes(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -98,10 +101,13 @@ export async function POST(req: NextRequest) {
       type: parsed.data.type,
       quantity: parsed.data.quantity,
       notes: parsed.data.notes,
+      borrowerId:
+        parsed.data.type === "IN" ? null : parsed.data.borrowerId?.trim() ?? null,
     },
     include: {
       item: { select: { id: true, name: true } },
       user: { select: { id: true, name: true } },
+      borrower: { select: { id: true, fullName: true, studentId: true } },
     },
   });
 

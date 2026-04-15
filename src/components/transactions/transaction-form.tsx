@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
 import { transactionSchema, type TransactionInput } from "@/lib/validations";
@@ -22,25 +22,41 @@ interface Item {
   name: string;
 }
 
+interface BorrowerOpt {
+  id: string;
+  fullName: string;
+  studentId: string;
+}
+
 interface TransactionFormProps {
   items: Item[];
+  borrowers: BorrowerOpt[];
   onSubmit: (data: TransactionInput) => Promise<void>;
   defaultItemId?: string;
 }
 
-export function TransactionForm({ items, onSubmit, defaultItemId }: TransactionFormProps) {
+export function TransactionForm({
+  items,
+  borrowers,
+  onSubmit,
+  defaultItemId,
+}: TransactionFormProps) {
   const {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<TransactionInput>({
     resolver: zodResolver(transactionSchema) as Resolver<TransactionInput>,
     defaultValues: {
       itemId: defaultItemId ?? "",
       quantity: 1,
+      borrowerId: "",
     },
   });
+
+  const type = useWatch({ control, name: "type" });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -67,21 +83,51 @@ export function TransactionForm({ items, onSubmit, defaultItemId }: TransactionF
       </div>
 
       <div className="space-y-2">
-        <Label>Transaction Type</Label>
+        <Label>Transaction type</Label>
         <Select onValueChange={(val) => val && setValue("type", val as "IN" | "OUT" | "RETURN")}>
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="IN">Receive (IN)</SelectItem>
-            <SelectItem value="OUT">Issue (OUT)</SelectItem>
-            <SelectItem value="RETURN">Return</SelectItem>
+            <SelectItem value="IN">Receive stock (IN)</SelectItem>
+            <SelectItem value="OUT">Issue to borrower (OUT)</SelectItem>
+            <SelectItem value="RETURN">Return from borrower</SelectItem>
           </SelectContent>
         </Select>
         {errors.type && (
           <p className="text-xs text-destructive">{errors.type.message}</p>
         )}
       </div>
+
+      {(type === "OUT" || type === "RETURN") && (
+        <div className="space-y-2">
+          <Label>Borrower (student)</Label>
+          <Select
+            onValueChange={(val) =>
+              setValue("borrowerId", typeof val === "string" ? val : "")
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select registered borrower" />
+            </SelectTrigger>
+            <SelectContent>
+              {borrowers.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.fullName} ({b.studentId})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.borrowerId && (
+            <p className="text-xs text-destructive">{errors.borrowerId.message}</p>
+          )}
+          {borrowers.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              Register borrowers under Borrowers (students) first.
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="quantity">Quantity</Label>
@@ -98,7 +144,7 @@ export function TransactionForm({ items, onSubmit, defaultItemId }: TransactionF
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Record Transaction
+        Record transaction
       </Button>
     </form>
   );

@@ -85,6 +85,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                     <TableRow>
                       <TableHead>Type</TableHead>
                       <TableHead>Quantity</TableHead>
+                      <TableHead>Borrower</TableHead>
                       <TableHead>By</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
@@ -106,6 +107,11 @@ export default async function ItemDetailPage({ params }: PageProps) {
                           </Badge>
                         </TableCell>
                         <TableCell>{tx.quantity}</TableCell>
+                        <TableCell className="max-w-[160px] truncate text-muted-foreground text-sm">
+                          {tx.borrower
+                            ? `${tx.borrower.fullName} (${tx.borrower.studentId})`
+                            : "—"}
+                        </TableCell>
                         <TableCell className="text-muted-foreground">
                           {tx.user.name}
                         </TableCell>

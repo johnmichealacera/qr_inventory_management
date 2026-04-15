@@ -32,20 +32,42 @@ export const createItemSchema = z.object({
 
 export const updateItemSchema = createItemSchema.partial();
 
-export const transactionSchema = z.object({
-  itemId: z.string().min(1, "Item is required"),
-  type: z.enum(["IN", "OUT", "RETURN"], {
-    message: "Transaction type is required",
-  }),
-  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
-  notes: z.string().optional(),
+export const transactionSchema = z
+  .object({
+    itemId: z.string().min(1, "Item is required"),
+    type: z.enum(["IN", "OUT", "RETURN"], {
+      message: "Transaction type is required",
+    }),
+    quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+    notes: z.string().optional(),
+    borrowerId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === "IN") return true;
+      return Boolean(data.borrowerId?.trim());
+    },
+    {
+      message: "Borrower (student) is required for issuance and return",
+      path: ["borrowerId"],
+    }
+  );
+
+export const createBorrowerSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
+  studentId: z.string().min(1, "Student ID is required"),
+  programSection: z.string().optional(),
+  contactPhone: z.string().optional(),
 });
+
+export const updateBorrowerSchema = createBorrowerSchema.partial();
 
 export const reportFilterSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   itemId: z.string().optional(),
   type: z.enum(["IN", "OUT", "RETURN"]).optional(),
+  borrowerId: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -58,3 +80,5 @@ export type CreateItemInput = z.infer<typeof createItemSchema>;
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
 export type ReportFilterInput = z.infer<typeof reportFilterSchema>;
+export type CreateBorrowerInput = z.infer<typeof createBorrowerSchema>;
+export type UpdateBorrowerInput = z.infer<typeof updateBorrowerSchema>;
