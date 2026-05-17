@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Figure 15 — Stock Calculation Logic</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .node {
+      width: 100%;
+      max-width: 420px;
+      padding: 0.85rem 1.1rem;
+      border-radius: 10px;
+      border: 2px solid;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    .node strong { display: block; margin-bottom: 0.25rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .node small { color: #475569; font-size: 0.78rem; }
+    .start { background: #dbeafe; border-color: #2563eb; }
+    .process { background: #fff; border-color: #64748b; }
+    .decision {
+      background: #fef9c3;
+      border-color: #ca8a04;
+      max-width: 320px;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      padding: 2rem 1.5rem;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .decision-inner {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .action-in { background: #dcfce7; border-color: #16a34a; }
+    .action-out { background: #fee2e2; border-color: #dc2626; }
+    .action-return { background: #fef3c7; border-color: #d97706; }
+    .end { background: #e0e7ff; border-color: #4338ca; }
+    .arrow {
+      width: 2px;
+      height: 24px;
+      background: #94a3b8;
+      position: relative;
+    }
+    .arrow::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 9px solid #94a3b8;
+    }
+    .branch-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 640px;
+      margin: 0.5rem 0;
+    }
+    .branch-row .node { max-width: none; font-size: 0.8rem; padding: 0.65rem; }
+    .loop-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin: 0.35rem 0;
+      font-style: italic;
+    }
+    .formula-box {
+      margin-top: 2rem;
+      padding: 1.25rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+    .formula-box h2 {
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    pre {
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      font-family: ui-monospace, "Cascadia Code", monospace;
+    }
+    .types {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    .type-badge {
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .type-in { background: #dcfce7; color: #166534; }
+    .type-out { background: #fee2e2; color: #991b1b; }
+    .type-return { background: #fef3c7; color: #92400e; }
+    .low-stock {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #fff7ed;
+      border: 2px dashed #ea580c;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+    .low-stock code {
+      font-family: ui-monospace, monospace;
+      background: #ffedd5;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+    @media print {
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Figure 15. Stock Calculation Logic</h1>
+  <p class="subtitle">Function: getItemStock(itemId) — transaction-based inventory (no static stock field)</p>
+
+  <div class="wrap">
+    <div class="flow">
+      <div class="node start">
+        <strong>Start</strong>
+        Input: itemId
+      </div>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <div class="node process">
+        <strong>Initialize</strong>
+        stock = 0
+      </div>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <div class="node process">
+        <strong>Query database</strong>
+        <small>GROUP BY type on transactions WHERE itemId = ?</small>
+        <small>SUM(quantity) per type (IN, OUT, RETURN)</small>
+      </div>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <p class="loop-label">For each transaction type group:</p>
+
+      <div class="branch-row">
+        <div class="node action-in">
+          <strong>IN</strong>
+          Receive stock<br />
+          stock += qty
+        </div>
+        <div class="node action-return">
+          <strong>RETURN</strong>
+          Returned by borrower<br />
+          stock += qty
+        </div>
+        <div class="node action-out">
+          <strong>OUT</strong>
+          Issued to borrower<br />
+          stock −= qty
+        </div>
+      </div>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <div class="node process">
+        <strong>Floor at zero</strong>
+        <small>Prevent negative display</small>
+        return max(0, stock)
+      </div>
+
+      <div class="arrow" aria-hidden="true"></div>
+
+      <div class="node end">
+        <strong>Output</strong>
+        currentStock (used on dashboard, inventory, scan)
+      </div>
+    </div>
+
+    <div class="types">
+      <span class="type-badge type-in">IN — adds to stock</span>
+      <span class="type-badge type-return">RETURN — adds to stock</span>
+      <span class="type-badge type-out">OUT — subtracts from stock</span>
+    </div>
+
+    <div class="formula-box">
+      <h2>Pseudocode (server/items.ts)</h2>
+      <pre>function getItemStock(itemId):
+    groups = db.transaction.groupBy(type, itemId)
+    stock = 0
+
+    for each row in groups:
+        qty = row.sum(quantity) ?? 0
+        if row.type is "IN" or "RETURN":
+            stock += qty
+        else if row.type is "OUT":
+            stock -= qty
+
+    return max(0, stock)</pre>
+    </div>
+
+    <div class="low-stock">
+      <strong>Low stock alert</strong><br />
+      <code>isLowStock = (currentStock &lt;= reorderLevel)</code><br />
+      <small>Shown on dashboard, inventory list, and item detail</small>
+    </div>
+  </div>
+</body>
+</html>

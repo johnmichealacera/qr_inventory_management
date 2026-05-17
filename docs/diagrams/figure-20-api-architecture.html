@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Figure 20 — API Architecture (Mobile / Integration)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 2rem;
+      line-height: 1.45;
+    }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+    .diagram {
+      max-width: 920px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .layer {
+      width: 100%;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      text-align: center;
+      border: 2px solid;
+    }
+    .layer-title {
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.6rem;
+    }
+    .arrow {
+      width: 2px;
+      height: 28px;
+      background: #94a3b8;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .arrow::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 10px solid #94a3b8;
+    }
+    .clients { background: #eff6ff; border-color: #3b82f6; }
+    .auth { background: #fef3c7; border-color: #d97706; }
+    .api-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+    }
+    .api { background: #ecfdf5; border-color: #059669; }
+    .actions { background: #f5f3ff; border-color: #7c3aed; }
+    .logic { background: #fff7ed; border-color: #ea580c; }
+    .data { background: #f1f5f9; border-color: #475569; }
+    .db { background: #e0e7ff; border-color: #4338ca; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      justify-content: center;
+    }
+    .chip {
+      font-size: 0.72rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.08);
+      font-family: ui-monospace, monospace;
+    }
+    .chip.get { border-left: 3px solid #22c55e; }
+    .chip.post { border-left: 3px solid #3b82f6; }
+    .chip.patch { border-left: 3px solid #f59e0b; }
+    .chip.del { border-left: 3px solid #ef4444; }
+    .chip.auth-route { border-left: 3px solid #d97706; }
+    .modules {
+      font-size: 0.75rem;
+      color: #334155;
+      margin-top: 0.35rem;
+    }
+    .legend {
+      max-width: 920px;
+      margin: 2rem auto 0;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.8rem;
+    }
+    .legend h2 { font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .legend table { width: 100%; border-collapse: collapse; }
+    .legend th, .legend td {
+      border: 1px solid #e2e8f0;
+      padding: 0.35rem 0.5rem;
+      text-align: left;
+    }
+    .legend th { background: #f1f5f9; font-size: 0.75rem; }
+    .legend td code { font-size: 0.7rem; }
+    @media (max-width: 640px) {
+      .api-row { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: #fff; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Figure 20. API Architecture (for Mobile / Integration)</h1>
+  <p class="subtitle">QR-Code Integrated Inventory Management System — REST + Server Actions</p>
+
+  <div class="diagram">
+    <div class="layer clients">
+      <div class="layer-title">Client Layer</div>
+      <div class="chips">
+        <span class="chip">Web Browser (Dashboard UI)</span>
+        <span class="chip">Future Mobile App (Android / iOS)</span>
+        <span class="chip">Postman / API Client (testing)</span>
+      </div>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="layer auth">
+      <div class="layer-title">Authentication</div>
+      <div class="chips">
+        <span class="chip auth-route">POST /api/auth/[...nextauth]</span>
+        <span class="chip">JWT Session (credentials)</span>
+        <span class="chip">Middleware route protection</span>
+      </div>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="api-row">
+      <div class="layer api">
+        <div class="layer-title">REST API Routes</div>
+        <div class="chips">
+          <span class="chip get">GET /api/items</span>
+          <span class="chip post">POST /api/items</span>
+          <span class="chip get">GET /api/items/:id</span>
+          <span class="chip patch">PATCH /api/items/:id</span>
+          <span class="chip del">DELETE /api/items/:id</span>
+          <span class="chip get">GET /api/categories</span>
+          <span class="chip post">POST /api/categories</span>
+          <span class="chip get">GET /api/transactions</span>
+          <span class="chip post">POST /api/transactions</span>
+          <span class="chip get">GET /api/scan?value=</span>
+          <span class="chip get">GET /api/reports/export</span>
+        </div>
+        <p class="modules">Mobile integration: HTTP + session cookie</p>
+      </div>
+
+      <div class="layer actions">
+        <div class="layer-title">Server Actions (Web UI)</div>
+        <div class="chips">
+          <span class="chip">server/items.ts</span>
+          <span class="chip">server/categories.ts</span>
+          <span class="chip">server/transactions.ts</span>
+          <span class="chip">server/borrowers.ts</span>
+          <span class="chip">server/users.ts</span>
+          <span class="chip">server/dashboard.ts</span>
+          <span class="chip">server/audit-logs.ts</span>
+        </div>
+        <p class="modules">Same business rules as API; used by React dashboard</p>
+      </div>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="layer logic">
+      <div class="layer-title">Business Logic Layer</div>
+      <div class="chips">
+        <span class="chip">Zod validation</span>
+        <span class="chip">requireRole() RBAC</span>
+        <span class="chip">getItemStock()</span>
+        <span class="chip">Audit logging</span>
+        <span class="chip">Borrower rules (OUT / RETURN)</span>
+      </div>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="layer data">
+      <div class="layer-title">Data Access</div>
+      <p style="font-size: 0.9rem; font-weight: 600;">Prisma ORM</p>
+    </div>
+
+    <div class="arrow" aria-hidden="true"></div>
+
+    <div class="layer db">
+      <div class="layer-title">Database</div>
+      <p style="font-size: 0.9rem; font-weight: 600;">PostgreSQL</p>
+      <p class="modules">items · categories · borrowers · transactions · qr_codes · users · roles · audit_logs</p>
+    </div>
+  </div>
+
+  <section class="legend">
+    <h2>Endpoint summary</h2>
+    <table>
+      <thead>
+        <tr><th>Method</th><th>Endpoint</th><th>Roles</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>GET/POST</td><td><code>/api/items</code></td><td>Auth / Admin, Custodian</td></tr>
+        <tr><td>GET/PATCH/DELETE</td><td><code>/api/items/:id</code></td><td>Auth / Admin, Custodian / Admin</td></tr>
+        <tr><td>GET/POST</td><td><code>/api/categories</code></td><td>Auth / Admin, Custodian</td></tr>
+        <tr><td>GET/POST</td><td><code>/api/transactions</code></td><td>Auth / Admin, Custodian</td></tr>
+        <tr><td>GET</td><td><code>/api/scan?value=INV-…</code></td><td>Authenticated</td></tr>
+        <tr><td>GET</td><td><code>/api/reports/export</code></td><td>Admin, Custodian, Auditor</td></tr>
+        <tr><td>*</td><td><code>/api/auth/[...nextauth]</code></td><td>Public (login)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</body>
+</html>
