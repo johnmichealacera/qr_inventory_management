@@ -9,7 +9,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   const isLoginPage = pathname === "/login";
-  const isPublicRoute = pathname === "/" || isLoginPage;
+  const isPublicRoute = pathname === "/" || isLoginPage || pathname === "/demo-flow.html";
   const isAuthApi = pathname.startsWith("/api/auth");
 
   if (isAuthApi) return NextResponse.next();

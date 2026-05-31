@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { QrCode, Loader2 } from "lucide-react";
+import { QrCode, Loader2, PlayCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,7 +44,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-3">
+      <Card className="w-full">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary">
             <QrCode className="h-7 w-7 text-primary-foreground" />
@@ -91,6 +92,16 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
+      <a
+        href="/demo-flow.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+      >
+        <PlayCircle className="h-3.5 w-3.5" />
+        View defense demo flow
+      </a>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defense Demo Flow — QR Inventory Management System · College of Criminology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --void:#ffffff;
+  --deep:#f8fafc;
+  --ink:#0d1f3c;
+  --t90:rgba(13,31,60,0.90);
+  --t70:rgba(13,31,60,0.65);
+  --t45:rgba(13,31,60,0.40);
+  --t20:rgba(13,31,60,0.14);
+  --t08:rgba(13,31,60,0.07);
+
+  /* Role palette */
+  --admin:#7c3aed;
+  --admin-bg:#f5f3ff;
+  --admin-border:#ddd6fe;
+  --custodian:#0891b2;
+  --custodian-bg:#ecfeff;
+  --custodian-border:#a5f3fc;
+  --auditor:#d97706;
+  --auditor-bg:#fffbeb;
+  --auditor-border:#fde68a;
+  --accent:#059669;
+  --accent-bg:#ecfdf5;
+  --accent-border:#a7f3d0;
+}
+
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family:'Inter',sans-serif;
+  background:#ffffff;
+  color:var(--ink);
+  overflow-x:hidden;
+}
+
+/* ── PROGRESS NAV ── */
+#progress-bar{
+  position:fixed;top:0;left:0;
+  height:3px;width:0%;
+  background:linear-gradient(90deg,#7c3aed,#0891b2,#059669);
+  z-index:1000;
+  transition:width 0.2s ease;
+}
+#nav{
+  position:fixed;top:3px;left:0;right:0;
+  height:52px;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(13,31,60,0.07);
+  box-shadow:0 1px 12px rgba(13,31,60,0.05);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;
+  z-index:999;
+}
+.nav-brand{font-size:13px;font-weight:600;color:#64748b;}
+.nav-brand b{color:#7c3aed;}
+.nav-dots{display:flex;align-items:center;gap:6px;}
+.nav-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(13,31,60,0.14);
+  cursor:pointer;
+  transition:all 0.25s;
+  border:none;
+  padding:0;
+}
+.nav-dot.active{width:20px;border-radius:4px;background:#7c3aed;}
+.nav-dot:hover:not(.active){background:rgba(124,58,237,0.35);}
+.nav-kbd{
+  font-size:11px;color:var(--t45);
+  display:flex;align-items:center;gap:6px;
+}
+.kbd{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:18px;
+  background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;
+  font-size:10px;font-weight:600;color:#475569;
+}
+
+/* ── SECTIONS ── */
+.slide{
+  min-height:100vh;
+  padding:80px 48px 60px;
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;
+  overflow:hidden;
+}
+.slide-inner{max-width:1060px;margin:0 auto;width:100%;}
+
+/* ── TITLE SLIDE ── */
+#s0{background:linear-gradient(160deg,#f5f3ff 0%,#ffffff 55%,#ecfdf5 100%);}
+#s0::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(#ddd6fe 1px,transparent 1px);
+  background-size:30px 30px;
+  opacity:0.30;
+  pointer-events:none;
+}
+.title-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:#ffffff;border:1px solid #ddd6fe;border-radius:24px;
+  padding:5px 14px;
+  font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:#7c3aed;margin-bottom:22px;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(30px,5vw,58px);
+  line-height:1.1;color:#0d1f3c;
+  margin-bottom:16px;
+}
+.hero-title span{
+  background:linear-gradient(135deg,#7c3aed,#0891b2,#059669);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:17px;color:var(--t70);max-width:620px;line-height:1.6;margin-bottom:40px;}
+.stat-row{display:flex;flex-wrap:wrap;gap:16px;}
+.stat-pill{
+  background:#ffffff;border:1px solid #ede9fe;border-radius:10px;
+  padding:14px 22px;
+  text-align:center;
+}
+.stat-num{font-size:28px;font-weight:700;color:#7c3aed;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--t70);margin-top:4px;letter-spacing:0.04em;}
+
+/* ── ACCOUNTS SLIDE ── */
+#s1{background:var(--deep);}
+.accounts-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:12px;
+  margin-top:24px;
+}
+.account-card{
+  background:#ffffff;border-radius:10px;
+  padding:14px 16px;
+  border-left:4px solid var(--role-color,#7c3aed);
+  border-top:1px solid rgba(13,31,60,0.07);
+  border-right:1px solid rgba(13,31,60,0.07);
+  border-bottom:1px solid rgba(13,31,60,0.07);
+}
+.account-role{
+  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--role-color,#7c3aed);margin-bottom:5px;
+}
+.account-name{font-size:14px;font-weight:600;color:#1e293b;}
+.account-login{font-size:11px;color:var(--t45);font-family:monospace;margin-top:3px;}
+.account-pass{font-size:11px;color:var(--t45);font-family:monospace;}
+.account-scope{
+  display:inline-block;margin-top:7px;
+  font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;
+  background:rgba(13,31,60,0.06);border-radius:4px;padding:2px 7px;color:var(--t70);
+}
+
+/* ── SCENE SLIDES ── */
+.scene-slide{background:#ffffff;}
+.scene-slide:nth-child(even){background:var(--deep);}
+.scene-num{
+  font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--t45);margin-bottom:12px;
+}
+.scene-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(22px,3.5vw,36px);
+  color:#0d1f3c;line-height:1.2;
+  margin-bottom:20px;
+}
+.scene-body{
+  display:grid;
+  grid-template-columns:1fr 1.6fr;
+  gap:28px;
+  align-items:start;
+}
+@media(max-width:768px){.scene-body{grid-template-columns:1fr;}}
+
+/* Role badge block */
+.role-block{
+  background:var(--role-bg,#f5f3ff);
+  border:1px solid var(--role-border,#ddd6fe);
+  border-radius:14px;
+  padding:20px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.role-avatar{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--role-color,#7c3aed);
+  display:flex;align-items:center;justify-content:center;
+  color:#ffffff;font-size:18px;font-weight:700;
+  font-family:'Playfair Display',serif;
+  flex-shrink:0;
+}
+.role-name{font-size:16px;font-weight:700;color:#1e293b;}
+.role-title{font-size:12px;color:var(--t70);}
+.role-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--role-color,#7c3aed);
+  color:#ffffff;
+  border-radius:6px;padding:3px 10px;
+  font-size:11px;font-weight:700;letter-spacing:0.04em;
+  width:fit-content;
+}
+.role-module{
+  font-size:12px;color:var(--t70);
+  display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;
+}
+.role-module span{
+  background:rgba(13,31,60,0.06);border-radius:5px;
+  padding:2px 8px;font-size:11px;font-weight:600;color:#334155;
+}
+
+/* Actions block */
+.actions-block{display:flex;flex-direction:column;gap:12px;}
+.action-list{
+  background:#ffffff;border:1px solid rgba(13,31,60,0.08);
+  border-radius:12px;overflow:hidden;
+}
+.action-list-head{
+  background:linear-gradient(90deg,var(--role-bg,#f5f3ff),#f8fafc);
+  border-bottom:1px solid rgba(13,31,60,0.07);
+  padding:10px 16px;
+  font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+  color:var(--t70);
+}
+.action-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 16px;
+  border-bottom:1px solid rgba(13,31,60,0.05);
+  font-size:13px;color:var(--t90);
+  line-height:1.5;
+}
+.action-item:last-child{border-bottom:none;}
+.action-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--role-color,#7c3aed);
+  color:#ffffff;
+  font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.action-text strong{color:#1e293b;}
+
+/* RBAC callout */
+.rbac-callout{
+  background:linear-gradient(135deg,var(--role-bg,#f5f3ff),#f8fafc);
+  border:1px solid var(--role-border,#ddd6fe);
+  border-left:4px solid var(--role-color,#7c3aed);
+  border-radius:10px;
+  padding:14px 16px;
+  font-size:13px;color:#334155;line-height:1.6;
+}
+.rbac-callout-label{
+  font-size:10px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;
+  color:var(--role-color,#7c3aed);margin-bottom:6px;
+}
+
+/* Section labels */
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:#7c3aed;margin-bottom:18px;
+}
+
+/* ── SUMMARY SLIDE ── */
+#s_end{background:linear-gradient(160deg,#f5f3ff 0%,#f8fafc 50%,#ecfdf5 100%);}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:14px;margin-top:28px;
+}
+.summary-card{
+  background:#ffffff;border:1px solid #ede9fe;border-radius:12px;
+  padding:16px;text-align:center;
+}
+.summary-icon{font-size:24px;margin-bottom:8px;}
+.summary-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px;}
+.summary-desc{font-size:11px;color:var(--t70);line-height:1.5;}
+
+/* Inline code path */
+.path{
+  font-family:monospace;
+  background:rgba(124,58,237,0.07);
+  border-radius:4px;padding:1px 6px;
+  font-size:12px;color:#5b21b6;
+}
+
+/* ── ANIMATIONS ── */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+@media print{
+  #nav,#progress-bar{display:none!important;}
+  .slide{min-height:auto;padding:40px;page-break-after:always;}
+  .reveal{opacity:1!important;transform:none!important;}
+}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- ── NAV ── -->
+<nav id="nav">
+  <div class="nav-brand"><b>QR Inventory</b> · Defense Demo Flow</div>
+  <div class="nav-dots" id="nav-dots"></div>
+  <div class="nav-kbd">
+    <span class="kbd">◀</span><span class="kbd">▶</span>
+    <span style="margin-left:4px;">navigate</span>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════ TITLE ══ -->
+<section class="slide" id="s0" data-title="Overview">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="title-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Capstone Defense · May 2026
+      </div>
+      <h1 class="hero-title">
+        QR-Code Integrated<br>
+        <span>Inventory Management System</span>
+      </h1>
+      <p class="hero-sub">
+        A complete equipment management workflow — from Admin setup and item registration with auto-generated QR codes, to Custodian-driven issuance and returns, and Auditor oversight with full reports. Three roles, ten scenes, every action enforced by the system.
+      </p>
+      <div class="stat-row">
+        <div class="stat-pill"><div class="stat-num">10</div><div class="stat-lbl">Scenes</div></div>
+        <div class="stat-pill"><div class="stat-num">3</div><div class="stat-lbl">Staff Roles</div></div>
+        <div class="stat-pill"><div class="stat-num" style="color:#0891b2;">9</div><div class="stat-lbl">Modules</div></div>
+        <div class="stat-pill"><div class="stat-num" style="color:#059669;">3</div><div class="stat-lbl">Transaction Types</div></div>
+      </div>
+      <p style="font-size:12px;color:var(--t45);margin-top:20px;">
+        College of Criminology · Equipment Program: CRIMINOLOGY<br>
+        Stack: Next.js 16 · TypeScript · PostgreSQL · Prisma · Auth.js v5 · QR Code scan &amp; generation
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ ACCOUNTS ══ -->
+<section class="slide" id="s1" data-title="Accounts">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="section-label">Demo Accounts</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,32px);color:#0d1f3c;margin-bottom:8px;">Three Roles — Three Levels of Access</h2>
+      <p style="font-size:14px;color:var(--t70);margin-bottom:4px;">Each login is locked to exactly what their role permits — RBAC enforced at both the UI and the API layer.</p>
+    </div>
+    <div class="accounts-grid reveal">
+
+      <div class="account-card" style="--role-color:var(--admin)">
+        <div class="account-role">Administrator</div>
+        <div class="account-name">System Administrator</div>
+        <div class="account-login">username: admin</div>
+        <div class="account-pass">password: password123</div>
+        <div class="account-scope">Full access · all 9 modules</div>
+      </div>
+
+      <div class="account-card" style="--role-color:var(--custodian)">
+        <div class="account-role">Custodian</div>
+        <div class="account-name">Equipment Custodian</div>
+        <div class="account-login">username: custodian</div>
+        <div class="account-pass">password: password123</div>
+        <div class="account-scope">Inventory · Transactions · Scanner · Borrowers · Reports</div>
+      </div>
+
+      <div class="account-card" style="--role-color:var(--auditor)">
+        <div class="account-role">Auditor</div>
+        <div class="account-name">Auditor User</div>
+        <div class="account-login">username: auditor</div>
+        <div class="account-pass">password: password123</div>
+        <div class="account-scope">View-only · Reports · Audit Logs</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:20px;background:#ffffff;border:1px solid #ede9fe;border-radius:12px;padding:16px;" class="reveal">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#7c3aed;margin-bottom:10px;">Module Access Matrix</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:#f5f3ff;">
+              <th style="text-align:left;padding:7px 12px;border-bottom:1px solid #ede9fe;color:#5b21b6;font-weight:700;">Module</th>
+              <th style="padding:7px 12px;border-bottom:1px solid #ede9fe;color:var(--admin);font-weight:700;">Admin</th>
+              <th style="padding:7px 12px;border-bottom:1px solid #ede9fe;color:var(--custodian);font-weight:700;">Custodian</th>
+              <th style="padding:7px 12px;border-bottom:1px solid #ede9fe;color:var(--auditor);font-weight:700;">Auditor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Dashboard</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Inventory</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓ (read)</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Categories</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓ (read)</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Borrowers</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">QR Scanner</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Transactions</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓ (read)</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Reports</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Audit Logs</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td><td style="text-align:center;">✓</td></tr>
+            <tr><td style="padding:6px 12px;color:#334155;">User Management</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td><td style="text-align:center;">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 1 — LOGIN ══ -->
+<section class="slide scene-slide" id="sc1" data-title="Login & Auth" style="background:#ffffff;">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 1 · Authentication</div>
+      <h2 class="scene-title">Secure Login with Role-Based Redirect</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--admin);--role-bg:var(--admin-bg);--role-border:var(--admin-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--admin);font-size:20px;">🔐</div>
+          <div>
+            <div class="role-name">Any Staff User</div>
+            <div class="role-title">Admin · Custodian · Auditor</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:#475569;">auth</div>
+        <div class="role-module">Route: <span>/login</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          The login page is the only public route. All other routes are protected by middleware — unauthenticated requests are silently redirected to <span class="path">/login</span>.
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:#475569;">1</div>
+            <div class="action-text">Open <strong>/login</strong> — enter username <em>admin</em> and password <em>password123</em></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:#475569;">2</div>
+            <div class="action-text">System validates credentials via <strong>bcrypt</strong> (12-round hash) — no plain-text passwords stored</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:#475569;">3</div>
+            <div class="action-text">On success: JWT session issued → redirect to <strong>/dashboard</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:#475569;">4</div>
+            <div class="action-text">Try wrong password — see the <strong>error message</strong>; page does not expose which field is wrong</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:#475569;">5</div>
+            <div class="action-text">Open an incognito tab and visit <strong>/dashboard</strong> directly — middleware redirects to <strong>/login</strong></div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Security implementation</div>
+          Passwords are hashed with <strong>bcryptjs (12 rounds)</strong>. Sessions use JWT strategy via <strong>Auth.js v5</strong>. Middleware reads the session token from the cookie on every request — no server-side state required. All role data is embedded in the JWT token and verified server-side.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 2 — ADMIN SETUP ══ -->
+<section class="slide scene-slide" id="sc2" data-title="Admin Setup" style="background:var(--deep);">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 2 · System Setup</div>
+      <h2 class="scene-title">Admin Configures Categories &amp; Staff Accounts</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--admin);--role-bg:var(--admin-bg);--role-border:var(--admin-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--admin);">A</div>
+          <div>
+            <div class="role-name">System Administrator</div>
+            <div class="role-title">Administrator · Full Access</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--admin);">admin</div>
+        <div class="role-module">Modules: <span>Categories</span><span>Users</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          Before items can be added, their categories must exist. Before staff can log in, accounts must be provisioned. This is the Admin's first-day setup.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--admin-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--admin);margin-bottom:6px;">Sample categories (seeded)</div>
+          <ul style="font-size:12px;color:#334155;line-height:1.8;padding-left:14px;">
+            <li>Criminology — Uniforms &amp; Gear</li>
+            <li>Criminology — Training Equipment</li>
+            <li>Criminology — Forensic Supplies</li>
+            <li>Criminology — Documentation</li>
+          </ul>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Categories</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">1</div>
+            <div class="action-text">Navigate to <strong>Categories</strong> — see the four seeded categories listed</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">2</div>
+            <div class="action-text">Click <strong>Add Category</strong> — enter a new name, e.g. <em>Criminology — First Aid Supplies</em> → Save</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">3</div>
+            <div class="action-text">The new category appears in the list — it is now selectable when adding inventory items</div>
+          </div>
+        </div>
+        <div class="action-list">
+          <div class="action-list-head">User Management</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">4</div>
+            <div class="action-text">Navigate to <strong>Users</strong> — table shows Admin, Custodian, Auditor with role badges</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">5</div>
+            <div class="action-text">Click <strong>Create User</strong> — fill name, username, role, password → Save</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">6</div>
+            <div class="action-text">New account is active immediately — role badge reflects module access on first login</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">RBAC in action</div>
+          The <strong>Users</strong> menu item does not appear in the sidebar for Custodian or Auditor. Attempting to navigate to <span class="path">/users</span> directly returns a permission error — enforced server-side, not just hidden in the UI.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 3 — ADD ITEM & QR ══ -->
+<section class="slide scene-slide" id="sc3" data-title="Add Item + QR">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 3 · Inventory</div>
+      <h2 class="scene-title">Custodian Adds an Item — QR Code Auto-Generated</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Equipment Custodian</div>
+            <div class="role-title">Custodian · College of Criminology</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>Inventory</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          Every item added to the system automatically gets its own QR code — no external tool required. The QR value is a unique string tied to the item's database ID.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:4px;">QR value format</div>
+          <div style="font-family:monospace;font-size:13px;color:#0e7490;">INV-&lt;item-id&gt;</div>
+          <div style="font-size:11px;color:var(--t45);margin-top:3px;">e.g. INV-cm5ab3k2f0000xyz12345</div>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Log in as <strong>custodian</strong> → navigate to <strong>Inventory</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Click <strong>Add Item</strong> — fill in: name (e.g. <em>Baton — Drill Training</em>), description, category (<em>Training Equipment</em>), reorder level (<em>10</em>)</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Click <strong>Save</strong> — item appears in the table; a QR code is generated in the background automatically</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text">Click the item row to open the <strong>Item Detail</strong> page — the QR code image is displayed on the right</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">5</div>
+            <div class="action-text">Click <strong>Download QR</strong> — saves a PNG file ready for printing and labeling the physical item</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">6</div>
+            <div class="action-text">Note the current stock: <strong>0</strong> — stock is computed live from all IN/OUT/RETURN transactions; no manual stock field</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Design highlight</div>
+          Stock is never stored directly — it is computed from the transaction ledger every time. <strong>IN</strong> adds stock; <strong>OUT</strong> deducts it; <strong>RETURN</strong> adds it back. This makes the audit trail the single source of truth.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 4 — REGISTER BORROWER ══ -->
+<section class="slide scene-slide" id="sc4" data-title="Register Borrower" style="background:var(--deep);">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 4 · Borrowers</div>
+      <h2 class="scene-title">Custodian Registers a Student Borrower</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Equipment Custodian</div>
+            <div class="role-title">Custodian · College of Criminology</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>Borrowers</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          Every OUT transaction requires a linked borrower. Registering students here creates the registry used during issuance — equipment is always tied to the student who received it.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:6px;">Seeded students</div>
+          <div style="font-size:12px;color:#334155;line-height:1.7;">
+            <strong>Ana Maria Santos</strong> — CRIM-2024-001 · BSCrim 4A<br>
+            <strong>Juan Dela Cruz</strong> — CRIM-2024-014 · BSCrim 3B
+          </div>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Navigate to <strong>Borrowers</strong> — see the two seeded student records</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Click <strong>Add Borrower</strong> — enter: full name, student ID (e.g. <em>CRIM-2024-032</em>), program &amp; section (<em>BSCrim 2C</em>), phone (optional)</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Save — the new student appears in the borrower table with their student ID</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text">This student is now selectable in the <strong>borrower dropdown</strong> when recording an OUT transaction</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">RBAC in action</div>
+          The <strong>Borrowers</strong> module is completely hidden from Auditors — neither the sidebar link nor the route is accessible. Auditors can view transaction records that reference borrowers, but they cannot modify the borrower registry.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 5 — INITIAL STOCK IN ══ -->
+<section class="slide scene-slide" id="sc5" data-title="Stock IN">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 5 · Transactions</div>
+      <h2 class="scene-title">Custodian Records an IN Transaction (Stock Received)</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Equipment Custodian</div>
+            <div class="role-title">Custodian · College of Criminology</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>Transactions</span> · Type: <span style="color:#059669;">IN</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          The first action on a newly added item is recording incoming stock. An IN transaction increases the available quantity and is the foundation of the ledger.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;margin-top:4px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#059669;margin-bottom:4px;">Transaction Type: IN</div>
+          <div style="font-size:12px;color:#334155;line-height:1.6;">
+            No borrower required.<br>
+            Stock formula: <strong>SUM(IN + RETURN) − SUM(OUT)</strong>
+          </div>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Navigate to <strong>Transactions → New Transaction</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Select type: <strong>IN</strong> — borrower field disappears (not required for IN)</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Choose item: <em>Baton — Drill Training</em>, quantity: <strong>30</strong>, notes: <em>"Received from procurement — batch 1"</em></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text">Submit → transaction is recorded; navigate back to Inventory</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">5</div>
+            <div class="action-text">The item now shows <strong>Stock: 30</strong> — computed live from the transaction log</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Ledger-based stock</div>
+          The stock figure is never a field you edit directly. It is always derived from the full transaction history — making it impossible to silently adjust stock without leaving a record. Every change is attributable to a specific user and timestamp.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 6 — QR SCAN + OUT ══ -->
+<section class="slide scene-slide" id="sc6" data-title="QR Scan → Issue OUT" style="background:var(--deep);">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 6 · QR Scanner</div>
+      <h2 class="scene-title">Custodian Scans QR Code to Issue Equipment (OUT)</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);font-size:22px;">📷</div>
+          <div>
+            <div class="role-name">Equipment Custodian</div>
+            <div class="role-title">QR Scan — Issuance Flow</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>QR Scanner</span> → Type: <span style="color:#dc2626;">OUT</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          The QR scanner is the core feature of the system. A staff member points the camera at a printed QR label — the item is identified instantly and a transaction form pre-fills automatically.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:4px;">Fallback</div>
+          <div style="font-size:12px;color:#334155;line-height:1.6;">If no camera — paste the QR value in the <strong>manual entry</strong> field. Same result, same flow.</div>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Navigate to <strong>QR Scanner</strong> — browser asks for camera permission; allow it</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Point the camera at the printed QR label on the <em>Baton — Drill Training</em> item</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Scan is recognized — item name, category, and current stock (<strong>30</strong>) appear on screen immediately</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text">Select type: <strong>OUT</strong> — borrower dropdown appears (required)</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">5</div>
+            <div class="action-text">Select borrower: <em>Ana Maria Santos (CRIM-2024-001)</em>, quantity: <strong>1</strong>, notes: <em>"Drill practicum — June 2"</em></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">6</div>
+            <div class="action-text">Submit → stock drops to <strong>29</strong>; transaction is recorded with the borrower linked</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Accountability on every OUT</div>
+          An OUT transaction without a borrower is <strong>rejected by the system</strong> — the form will not submit. Every issuance is linked to the specific student who received the equipment, creating a borrower-accountable chain of custody.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 7 — RETURN ══ -->
+<section class="slide scene-slide" id="sc7" data-title="Return Equipment">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 7 · Transactions</div>
+      <h2 class="scene-title">Custodian Records Equipment Return</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Equipment Custodian</div>
+            <div class="role-title">Custodian · College of Criminology</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>QR Scanner</span> · Type: <span style="color:#059669;">RETURN</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          When the student returns the equipment, the custodian scans the same QR code and records a RETURN — the stock is automatically restored.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#059669;margin-bottom:4px;">Stock change</div>
+          <div style="font-size:13px;font-weight:700;color:#1e293b;">29 → 30</div>
+          <div style="font-size:11px;color:var(--t45);">RETURN is treated the same as IN for stock calculation</div>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Go to <strong>QR Scanner</strong> — scan the same QR on the returned baton</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Item details load — current stock: <strong>29</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Select type: <strong>RETURN</strong> — select borrower: <em>Ana Maria Santos</em>, quantity: <strong>1</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text">Submit → stock restores to <strong>30</strong>; RETURN transaction recorded with borrower linked</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">5</div>
+            <div class="action-text">Navigate to <strong>Transactions</strong> — see all three records: IN · OUT · RETURN in chronological order</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Complete item lifecycle demonstrated</div>
+          You have now shown <strong>IN → OUT → RETURN</strong> — the full lifecycle of a single piece of equipment, every step recorded with user, borrower, timestamp, and quantity. No paper form, no manual ledger, no guesswork.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 8 — DASHBOARD ══ -->
+<section class="slide scene-slide" id="sc8" data-title="Dashboard" style="background:var(--deep);">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 8 · Monitoring</div>
+      <h2 class="scene-title">Admin Reviews the Live Dashboard</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--admin);--role-bg:var(--admin-bg);--role-border:var(--admin-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--admin);">A</div>
+          <div>
+            <div class="role-name">System Administrator</div>
+            <div class="role-title">Administrator · Full Access</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--admin);">admin</div>
+        <div class="role-module">Module: <span>Dashboard</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          The dashboard provides an at-a-glance view of inventory health. It surfaces low-stock alerts automatically — no manual checking needed.
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">What to show</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">1</div>
+            <div class="action-text">Log in as <strong>admin</strong> → <strong>Dashboard</strong> — summary cards: Total Items · Total Transactions · Low Stock Alerts</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">2</div>
+            <div class="action-text"><strong>Low Stock Alerts</strong> — items whose current stock is at or below the reorder level are flagged automatically</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">3</div>
+            <div class="action-text"><strong>Recent Transactions</strong> — the latest IN/OUT/RETURN records with item name, user, and time</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">4</div>
+            <div class="action-text">Point out: <em>stock alert threshold</em> is set per-item as the <strong>Reorder Level</strong> field when adding/editing an item</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">All roles see this</div>
+          Dashboard is accessible to Admin, Custodian, and Auditor — it is the shared command view. The data shown is always current — there is no "refresh" or caching delay.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 9 — REPORTS ══ -->
+<section class="slide scene-slide" id="sc9" data-title="Reports &amp; CSV">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 9 · Reporting</div>
+      <h2 class="scene-title">Auditor Filters Reports &amp; Exports CSV</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--auditor);--role-bg:var(--auditor-bg);--role-border:var(--auditor-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--auditor);">Au</div>
+          <div>
+            <div class="role-name">Auditor User</div>
+            <div class="role-title">Auditor · Read &amp; Export Only</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--auditor);">auditor</div>
+        <div class="role-module">Module: <span>Reports</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          The Auditor can query any combination of date range, item, transaction type, or borrower — then export the filtered result as a CSV for use in Excel or official records.
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--auditor);">1</div>
+            <div class="action-text">Log in as <strong>auditor</strong> → navigate to <strong>Reports</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--auditor);">2</div>
+            <div class="action-text">Set <strong>date range</strong> to cover today — click <strong>Apply Filter</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--auditor);">3</div>
+            <div class="action-text">Filter by <strong>type: OUT</strong> — only issuance records appear, each showing item, borrower name, student ID, quantity, custodian, and timestamp</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--auditor);">4</div>
+            <div class="action-text">Clear type filter — filter by <strong>item: Baton — Drill Training</strong> — see the complete IN → OUT → RETURN history for that item</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--auditor);">5</div>
+            <div class="action-text">Click <strong>Export CSV</strong> — downloads a file with the current filter applied; open it in Excel to confirm the data</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">RBAC in action</div>
+          Despite having read access to Reports and Audit Logs, the Auditor <strong>cannot create or modify</strong> any record. There is no "Add" button, no edit option, no delete — enforced both in the UI and at the API level via <code style="font-size:11px;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">requireRole()</code> server-side checks.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 10 — AUDIT LOGS ══ -->
+<section class="slide scene-slide" id="sc10" data-title="Audit Logs" style="background:#ffffff;">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 10 · Closing</div>
+      <h2 class="scene-title">The Complete Audit Trail</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--admin);--role-bg:var(--admin-bg);--role-border:var(--admin-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--admin);">A</div>
+          <div>
+            <div class="role-name">System Administrator</div>
+            <div class="role-title">Administrator · Full Access</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--admin);">admin</div>
+        <div class="role-module">Module: <span>Audit Logs</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          Every mutation in the system — create, update, delete, transaction — is recorded in the audit log with the acting user, the entity changed, and a timestamp. Nothing is anonymous.
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Everything that happened this session — all in one view</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">✓</div>
+            <div class="action-text"><strong>Admin</strong> created a category and a staff account</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">✓</div>
+            <div class="action-text"><strong>Custodian</strong> added the Baton item — QR code generated automatically</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">✓</div>
+            <div class="action-text"><strong>Custodian</strong> registered a student borrower</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">✓</div>
+            <div class="action-text"><strong>Custodian</strong> recorded IN (30 units) — stock ledger started</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">✓</div>
+            <div class="action-text"><strong>Custodian</strong> scanned QR → recorded OUT (1 unit) linked to Ana Maria Santos</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">✓</div>
+            <div class="action-text"><strong>Custodian</strong> scanned QR → recorded RETURN (1 unit) — stock restored</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--auditor);">✓</div>
+            <div class="action-text"><strong>Auditor</strong> filtered reports by type and item — exported CSV for official records</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">The governance promise</div>
+          Every action carries: <strong>who did it · what role · what entity · what changed · when.</strong> The College can trace any issuance, return, or modification back to the specific staff member. No paper ledger, no verbal report, no guesswork — the system is the record.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ END SLIDE ══ -->
+<section class="slide" id="s_end" data-title="Summary">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="section-label">What You Just Saw</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,42px);color:#0d1f3c;margin-bottom:10px;">
+        One System. Three Roles.<br>
+        <span style="background:linear-gradient(135deg,#7c3aed,#0891b2,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Zero Paper. Zero Guesswork.</span>
+      </h2>
+      <p style="font-size:15px;color:var(--t70);max-width:600px;margin-bottom:32px;line-height:1.6;">
+        Every step — from item setup and QR code generation to borrower-linked issuance and audit export — was enforced by the system. Each role did exactly what it is permitted to do. Nothing more.
+      </p>
+    </div>
+    <div class="summary-grid reveal">
+      <div class="summary-card">
+        <div class="summary-icon">🔐</div>
+        <div class="summary-title">Role Enforcement</div>
+        <div class="summary-desc">Admin, Custodian, and Auditor each see only their own modules — at the UI and API level.</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">📱</div>
+        <div class="summary-title">QR Scan & Generate</div>
+        <div class="summary-desc">Items get a unique QR code on creation. Camera scanning pre-fills the transaction form — no typing needed.</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">🎓</div>
+        <div class="summary-title">Borrower Tracking</div>
+        <div class="summary-desc">Every OUT and RETURN is linked to a registered student. Equipment accountability is per-person, not per-item.</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">📊</div>
+        <div class="summary-title">Ledger-Based Stock</div>
+        <div class="summary-desc">Stock is computed from IN/OUT/RETURN history — never a raw editable field. The ledger is the truth.</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">📤</div>
+        <div class="summary-title">Filtered CSV Export</div>
+        <div class="summary-desc">Auditors filter by date, item, type, or borrower and export exactly what they need for official reports.</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">🛡️</div>
+        <div class="summary-title">Full Audit Trail</div>
+        <div class="summary-desc">Every mutation is logged: who, what role, which entity, what changed, and when. Nothing is anonymous.</div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--t45);margin-top:28px;text-align:center;">
+      QR-Code Integrated Inventory Management System · College of Criminology<br>
+      Next.js 16 · TypeScript · PostgreSQL · Prisma · Auth.js v5 · Tailwind CSS v4 · shadcn/ui
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCRIPTS ══ -->
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'))
+const dotsContainer = document.getElementById('nav-dots')
+const progressBar = document.getElementById('progress-bar')
+
+slides.forEach((slide, i) => {
+  const dot = document.createElement('button')
+  dot.className = 'nav-dot'
+  dot.title = slide.dataset.title || `Slide ${i+1}`
+  dot.addEventListener('click', () => {
+    slide.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+  dotsContainer.appendChild(dot)
+})
+
+const dots = Array.from(dotsContainer.querySelectorAll('.nav-dot'))
+
+let activeDot = 0
+function updateNav() {
+  const scrollY = window.scrollY
+  const totalH = document.body.scrollHeight - window.innerHeight
+  const pct = totalH > 0 ? (scrollY / totalH) * 100 : 0
+  progressBar.style.width = pct + '%'
+
+  let found = 0
+  slides.forEach((slide, i) => {
+    const rect = slide.getBoundingClientRect()
+    if (rect.top <= window.innerHeight * 0.4) found = i
+  })
+  if (found !== activeDot) {
+    dots[activeDot]?.classList.remove('active')
+    dots[found]?.classList.add('active')
+    activeDot = found
+  }
+}
+
+window.addEventListener('scroll', updateNav, { passive: true })
+updateNav()
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    const next = Math.min(activeDot + 1, slides.length - 1)
+    slides[next].scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    const prev = Math.max(activeDot - 1, 0)
+    slides[prev].scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+})
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible')
+  })
+}, { threshold: 0.12 })
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+</script>
+</body>
+</html>
