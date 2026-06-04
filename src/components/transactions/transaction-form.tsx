@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
@@ -16,16 +17,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import {
+  INVENTORY_TYPES,
+  INVENTORY_TYPE_LABELS,
+  formatRequesterLine,
+} from "@/lib/constants";
+import type { InventoryTypeName } from "@/lib/constants";
 
 interface Item {
   id: string;
   name: string;
+  inventoryType: InventoryTypeName;
 }
 
 interface BorrowerOpt {
   id: string;
   fullName: string;
   studentId: string;
+  personType: string;
+  department: string;
 }
 
 interface TransactionFormProps {
@@ -57,6 +67,13 @@ export function TransactionForm({
   });
 
   const type = useWatch({ control, name: "type" });
+  const itemId = useWatch({ control, name: "itemId" });
+
+  const selectedItem = useMemo(
+    () => items.find((i) => i.id === itemId),
+    [items, itemId]
+  );
+  const isConsumable = selectedItem?.inventoryType === INVENTORY_TYPES.CONSUMABLE;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -72,7 +89,8 @@ export function TransactionForm({
           <SelectContent>
             {items.map((item) => (
               <SelectItem key={item.id} value={item.id}>
-                {item.name}
+                {item.name} (
+                {INVENTORY_TYPE_LABELS[item.inventoryType] ?? item.inventoryType})
               </SelectItem>
             ))}
           </SelectContent>
@@ -89,31 +107,45 @@ export function TransactionForm({
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="IN">Receive stock (IN)</SelectItem>
-            <SelectItem value="OUT">Issue to borrower (OUT)</SelectItem>
-            <SelectItem value="RETURN">Return from borrower</SelectItem>
+            <SelectItem value="IN">
+              {isConsumable ? "Receive stock (IN)" : "Receive stock (IN)"}
+            </SelectItem>
+            <SelectItem value="OUT">
+              {isConsumable ? "Release to requester (OUT)" : "Issue to requester (OUT)"}
+            </SelectItem>
+            {!isConsumable && selectedItem && (
+              <SelectItem value="RETURN">Return from requester</SelectItem>
+            )}
+            {!selectedItem && (
+              <SelectItem value="RETURN">Return from requester (borrowable only)</SelectItem>
+            )}
           </SelectContent>
         </Select>
         {errors.type && (
           <p className="text-xs text-destructive">{errors.type.message}</p>
         )}
+        {isConsumable && type === "RETURN" && (
+          <p className="text-xs text-destructive">
+            Consumable items cannot be returned. Choose Release instead.
+          </p>
+        )}
       </div>
 
       {(type === "OUT" || type === "RETURN") && (
         <div className="space-y-2">
-          <Label>Borrower (student)</Label>
+          <Label>Requester</Label>
           <Select
             onValueChange={(val) =>
               setValue("borrowerId", typeof val === "string" ? val : "")
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select registered borrower" />
+              <SelectValue placeholder="Select registered requester" />
             </SelectTrigger>
             <SelectContent>
               {borrowers.map((b) => (
                 <SelectItem key={b.id} value={b.id}>
-                  {b.fullName} ({b.studentId})
+                  {formatRequesterLine(b)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -123,7 +155,7 @@ export function TransactionForm({
           )}
           {borrowers.length === 0 && (
             <p className="text-xs text-muted-foreground">
-              Register borrowers under Borrowers (students) first.
+              Register requesters under Requesters first.
             </p>
           )}
         </div>
@@ -142,7 +174,11 @@ export function TransactionForm({
         <Textarea id="notes" placeholder="Add a note..." {...register("notes")} />
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isSubmitting || (isConsumable && type === "RETURN")}
+      >
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Record transaction
       </Button>

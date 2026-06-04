@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
 import { createItemSchema, type CreateItemInput } from "@/lib/validations";
+import { INVENTORY_TYPES, INVENTORY_TYPE_LABELS } from "@/lib/constants";
+import type { InventoryTypeName } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +29,8 @@ interface ItemFormProps {
   defaultValues?: Partial<CreateItemInput>;
   onSubmit: (data: CreateItemInput) => Promise<void>;
   submitLabel?: string;
+  /** Lock type when creating from borrowable vs consumables section */
+  fixedInventoryType?: InventoryTypeName;
 }
 
 export function ItemForm({
@@ -34,11 +38,13 @@ export function ItemForm({
   defaultValues,
   onSubmit,
   submitLabel = "Create Item",
+  fixedInventoryType,
 }: ItemFormProps) {
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateItemInput>({
     resolver: zodResolver(createItemSchema) as Resolver<CreateItemInput>,
@@ -47,14 +53,54 @@ export function ItemForm({
       description: defaultValues?.description ?? "",
       categoryId: defaultValues?.categoryId ?? "",
       reorderLevel: defaultValues?.reorderLevel ?? 10,
+      inventoryType:
+        fixedInventoryType ??
+        defaultValues?.inventoryType ??
+        INVENTORY_TYPES.BORROWABLE,
     },
   });
 
+  const inventoryType = watch("inventoryType");
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {!fixedInventoryType && !defaultValues?.inventoryType && (
+        <div className="space-y-2">
+          <Label>Inventory type</Label>
+          <Select
+            value={inventoryType}
+            onValueChange={(val) =>
+              val &&
+              setValue(
+                "inventoryType",
+                val as typeof INVENTORY_TYPES.BORROWABLE | typeof INVENTORY_TYPES.CONSUMABLE
+              )
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={INVENTORY_TYPES.BORROWABLE}>
+                {INVENTORY_TYPE_LABELS.BORROWABLE} — issued and returned
+              </SelectItem>
+              <SelectItem value={INVENTORY_TYPES.CONSUMABLE}>
+                {INVENTORY_TYPE_LABELS.CONSUMABLE} — released when used (not returned)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {fixedInventoryType && (
+        <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+          Type: <strong>{INVENTORY_TYPE_LABELS[fixedInventoryType]}</strong>
+        </p>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="name">Item Name</Label>
-        <Input id="name" placeholder="e.g. A4 Bond Paper" {...register("name")} />
+        <Input id="name" placeholder="e.g. Evidence collection gloves" {...register("name")} />
         {errors.name && (
           <p className="text-xs text-destructive">{errors.name.message}</p>
         )}

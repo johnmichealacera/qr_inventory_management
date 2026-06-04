@@ -27,7 +27,13 @@ import { getItems } from "@/server/items";
 import { getBorrowers } from "@/server/borrowers";
 import { createTransaction } from "@/server/transactions";
 import { format } from "date-fns";
-import { TRANSACTION_TYPE_LABELS } from "@/lib/constants";
+import {
+  TRANSACTION_TYPE_LABELS,
+  CONSUMABLE_TRANSACTION_TYPE_LABELS,
+  INVENTORY_TYPES,
+  formatRequesterLine,
+} from "@/lib/constants";
+import type { InventoryTypeName } from "@/lib/constants";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -36,6 +42,7 @@ import type { TransactionInput } from "@/lib/validations";
 interface Item {
   id: string;
   name: string;
+  inventoryType: InventoryTypeName;
 }
 
 interface Transaction {
@@ -44,9 +51,15 @@ interface Transaction {
   quantity: number;
   notes: string | null;
   createdAt: Date;
-  item: { id: string; name: string };
+  item: { id: string; name: string; inventoryType?: InventoryTypeName };
   user: { id: string; name: string };
-  borrower: { id: string; fullName: string; studentId: string } | null;
+  borrower: {
+    id: string;
+    fullName: string;
+    studentId: string;
+    personType: string;
+    department: string;
+  } | null;
 }
 
 const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -62,7 +75,13 @@ export function TransactionsClient() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [borrowers, setBorrowers] = useState<
-    { id: string; fullName: string; studentId: string }[]
+    {
+      id: string;
+      fullName: string;
+      studentId: string;
+      personType: string;
+      department: string;
+    }[]
   >([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -80,9 +99,21 @@ export function TransactionsClient() {
       setTransactions(txResult.transactions);
       setTotalPages(txResult.totalPages);
       setPage(txResult.page);
-      setItems(allItems.map((i) => ({ id: i.id, name: i.name })));
+      setItems(
+        allItems.map((i) => ({
+          id: i.id,
+          name: i.name,
+          inventoryType: i.inventoryType as InventoryTypeName,
+        }))
+      );
       setBorrowers(
-        allBorrowers.map((b) => ({ id: b.id, fullName: b.fullName, studentId: b.studentId }))
+        allBorrowers.map((b) => ({
+          id: b.id,
+          fullName: b.fullName,
+          studentId: b.studentId,
+          personType: b.personType,
+          department: b.department,
+        }))
       );
     } finally {
       setIsLoading(false);
@@ -149,7 +180,7 @@ export function TransactionsClient() {
                   <TableHead>Item</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Quantity</TableHead>
-                  <TableHead>Borrower</TableHead>
+                  <TableHead>Requester</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead>By</TableHead>
                   <TableHead>Date</TableHead>
@@ -161,14 +192,14 @@ export function TransactionsClient() {
                     <TableCell className="font-medium">{tx.item.name}</TableCell>
                     <TableCell>
                       <Badge variant={typeBadgeVariant[tx.type] ?? "outline"}>
-                        {TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type}
+                        {tx.item.inventoryType === INVENTORY_TYPES.CONSUMABLE
+                          ? (CONSUMABLE_TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type)
+                          : (TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type)}
                       </Badge>
                     </TableCell>
                     <TableCell>{tx.quantity}</TableCell>
                     <TableCell className="max-w-[140px] truncate text-muted-foreground text-sm">
-                      {tx.borrower
-                        ? `${tx.borrower.fullName} (${tx.borrower.studentId})`
-                        : "—"}
+                      {tx.borrower ? formatRequesterLine(tx.borrower) : "—"}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground">
                       {tx.notes ?? "—"}

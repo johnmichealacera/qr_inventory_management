@@ -12,12 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search } from "lucide-react";
 
+import type { InventoryTypeName } from "@/lib/constants";
+
 interface ScannedItem {
   id: string;
   name: string;
   description: string | null;
   reorderLevel: number;
   currentStock: number;
+  inventoryType: InventoryTypeName;
   category: { id: string; name: string };
 }
 

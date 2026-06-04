@@ -28,7 +28,13 @@ import { getTransactions } from "@/server/transactions";
 import { getItems } from "@/server/items";
 import { getBorrowers } from "@/server/borrowers";
 import { format } from "date-fns";
-import { TRANSACTION_TYPE_LABELS } from "@/lib/constants";
+import {
+  TRANSACTION_TYPE_LABELS,
+  CONSUMABLE_TRANSACTION_TYPE_LABELS,
+  INVENTORY_TYPES,
+  INVENTORY_TYPE_LABELS,
+  formatRequesterLine,
+} from "@/lib/constants";
 import { Download, Filter, Loader2, X } from "lucide-react";
 
 interface Transaction {
@@ -37,9 +43,15 @@ interface Transaction {
   quantity: number;
   notes: string | null;
   createdAt: Date;
-  item: { id: string; name: string };
+  item: { id: string; name: string; inventoryType?: string };
   user: { id: string; name: string };
-  borrower: { id: string; fullName: string; studentId: string } | null;
+  borrower: {
+    id: string;
+    fullName: string;
+    studentId: string;
+    personType: string;
+    department: string;
+  } | null;
 }
 
 interface Item {
@@ -51,6 +63,8 @@ interface BorrowerRow {
   id: string;
   fullName: string;
   studentId: string;
+  personType: string;
+  department: string;
 }
 
 const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -73,6 +87,7 @@ export function ReportsClient() {
   const [itemId, setItemId] = useState("");
   const [type, setType] = useState("");
   const [borrowerId, setBorrowerId] = useState("");
+  const [inventoryType, setInventoryType] = useState("");
 
   const exportHref = useMemo(() => {
     const p = new URLSearchParams();
@@ -81,9 +96,10 @@ export function ReportsClient() {
     if (itemId) p.set("itemId", itemId);
     if (type) p.set("type", type);
     if (borrowerId) p.set("borrowerId", borrowerId);
+    if (inventoryType) p.set("inventoryType", inventoryType);
     const q = p.toString();
     return q ? `/api/reports/export?${q}` : "/api/reports/export";
-  }, [startDate, endDate, itemId, type, borrowerId]);
+  }, [startDate, endDate, itemId, type, borrowerId, inventoryType]);
 
   async function loadData(p: number = 1) {
     setIsLoading(true);
@@ -96,6 +112,7 @@ export function ReportsClient() {
         itemId: itemId || undefined,
         type: type || undefined,
         borrowerId: borrowerId || undefined,
+        inventoryType: inventoryType || undefined,
       });
       setTransactions(result.transactions);
       setTotalPages(result.totalPages);
@@ -122,6 +139,7 @@ export function ReportsClient() {
     setItemId("");
     setType("");
     setBorrowerId("");
+    setInventoryType("");
     setTimeout(() => loadData(1), 0);
   }
 
@@ -135,7 +153,7 @@ export function ReportsClient() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div className="space-y-2">
               <Label>Start Date</Label>
               <Input
@@ -181,19 +199,41 @@ export function ReportsClient() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Borrower</Label>
+              <Label>Inventory type</Label>
+              <Select
+                value={inventoryType || "__all__"}
+                onValueChange={(val) =>
+                  setInventoryType(val === "__all__" ? "" : (val ?? ""))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All inventory types</SelectItem>
+                  <SelectItem value={INVENTORY_TYPES.BORROWABLE}>
+                    {INVENTORY_TYPE_LABELS.BORROWABLE}
+                  </SelectItem>
+                  <SelectItem value={INVENTORY_TYPES.CONSUMABLE}>
+                    {INVENTORY_TYPE_LABELS.CONSUMABLE}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Requester</Label>
               <Select
                 value={borrowerId || "__all__"}
                 onValueChange={(val) => setBorrowerId(val === "__all__" ? "" : (val ?? ""))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All borrowers" />
+                  <SelectValue placeholder="All requesters" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">All borrowers</SelectItem>
+                  <SelectItem value="__all__">All requesters</SelectItem>
                   {borrowers.map((b) => (
                     <SelectItem key={b.id} value={b.id}>
-                      {b.fullName} ({b.studentId})
+                      {formatRequesterLine(b)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -239,7 +279,7 @@ export function ReportsClient() {
                     <TableHead>Item</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Quantity</TableHead>
-                    <TableHead>Borrower</TableHead>
+                    <TableHead>Requester</TableHead>
                     <TableHead>Notes</TableHead>
                     <TableHead>By</TableHead>
                     <TableHead>Date</TableHead>
@@ -251,14 +291,14 @@ export function ReportsClient() {
                       <TableCell className="font-medium">{tx.item.name}</TableCell>
                       <TableCell>
                         <Badge variant={typeBadgeVariant[tx.type] ?? "outline"}>
-                          {TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type}
+                          {tx.item.inventoryType === INVENTORY_TYPES.CONSUMABLE
+                            ? (CONSUMABLE_TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type)
+                            : (TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type)}
                         </Badge>
                       </TableCell>
                       <TableCell>{tx.quantity}</TableCell>
                       <TableCell className="max-w-[180px] truncate text-muted-foreground text-sm">
-                        {tx.borrower
-                          ? `${tx.borrower.fullName} (${tx.borrower.studentId})`
-                          : "—"}
+                        {tx.borrower ? formatRequesterLine(tx.borrower) : "—"}
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate text-muted-foreground">
                         {tx.notes ?? "—"}

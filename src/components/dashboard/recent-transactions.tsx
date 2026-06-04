@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { TRANSACTION_TYPE_LABELS } from "@/lib/constants";
+import { TRANSACTION_TYPE_LABELS, formatRequesterLine } from "@/lib/constants";
 
 interface Transaction {
   id: string;
@@ -18,7 +18,13 @@ interface Transaction {
   createdAt: Date;
   item: { id: string; name: string };
   user: { id: string; name: string };
-  borrower: { id: string; fullName: string; studentId: string } | null;
+  borrower: {
+    id: string;
+    fullName: string;
+    studentId: string;
+    personType: string;
+    department: string;
+  } | null;
 }
 
 const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -45,7 +51,7 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
                 <TableHead>Item</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Qty</TableHead>
-                <TableHead>Borrower</TableHead>
+                <TableHead>Requester</TableHead>
                 <TableHead>By</TableHead>
                 <TableHead>Date</TableHead>
               </TableRow>
@@ -61,9 +67,7 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
                   </TableCell>
                   <TableCell>{tx.quantity}</TableCell>
                   <TableCell className="max-w-[140px] truncate text-muted-foreground text-xs">
-                    {tx.borrower
-                      ? `${tx.borrower.fullName} (${tx.borrower.studentId})`
-                      : "—"}
+                    {tx.borrower ? formatRequesterLine(tx.borrower) : "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground">{tx.user.name}</TableCell>
                   <TableCell className="text-muted-foreground">

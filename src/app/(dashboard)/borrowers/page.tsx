@@ -15,8 +15,8 @@ export default async function BorrowersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Borrowers (students)"
-        description="Register students for equipment issuance and return tracking — College of Criminology"
+        title="Requesters"
+        description="Register students, staff, and faculty with department — for borrow and consumable release tracking"
       />
       <BorrowersClient initialBorrowers={borrowers} />
     </div>

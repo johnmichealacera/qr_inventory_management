@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   LayoutDashboard,
   Package,
+  Boxes,
   FolderOpen,
   ScanLine,
   ArrowLeftRight,
@@ -27,10 +28,16 @@ import { Badge } from "@/components/ui/badge";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Inventory", href: "/inventory", icon: Package },
+  { name: "Borrowable inventory", href: "/inventory", icon: Package },
+  {
+    name: "Consumables",
+    href: "/consumables",
+    icon: Boxes,
+    roles: ["Admin", "Custodian", "Auditor"],
+  },
   { name: "Categories", href: "/categories", icon: FolderOpen },
   {
-    name: "Borrowers",
+    name: "Requesters",
     href: "/borrowers",
     icon: UserRound,
     roles: ["Admin", "Custodian"],

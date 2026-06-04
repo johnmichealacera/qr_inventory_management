@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,12 @@ import { createTransaction } from "@/server/transactions";
 import { getBorrowers } from "@/server/borrowers";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine, RotateCcw, Loader2, X } from "lucide-react";
+import {
+  INVENTORY_TYPES,
+  INVENTORY_TYPE_LABELS,
+  formatRequesterLine,
+} from "@/lib/constants";
+import type { InventoryTypeName } from "@/lib/constants";
 
 interface ScannedItem {
   id: string;
@@ -26,6 +32,7 @@ interface ScannedItem {
   description: string | null;
   reorderLevel: number;
   currentStock: number;
+  inventoryType: InventoryTypeName;
   category: { name: string };
 }
 
@@ -33,6 +40,8 @@ interface BorrowerOpt {
   id: string;
   fullName: string;
   studentId: string;
+  personType: string;
+  department: string;
 }
 
 interface ScanResultProps {
@@ -40,14 +49,50 @@ interface ScanResultProps {
   onClear: () => void;
 }
 
-const transactionActions = [
-  { type: "IN" as const, label: "Receive", icon: ArrowDownToLine, color: "bg-emerald-600 hover:bg-emerald-700" },
-  { type: "OUT" as const, label: "Issue", icon: ArrowUpFromLine, color: "bg-blue-600 hover:bg-blue-700" },
-  { type: "RETURN" as const, label: "Return", icon: RotateCcw, color: "bg-amber-600 hover:bg-amber-700" },
+const borrowableActions = [
+  {
+    type: "IN" as const,
+    label: "Receive",
+    icon: ArrowDownToLine,
+    color: "bg-emerald-600 hover:bg-emerald-700",
+  },
+  {
+    type: "OUT" as const,
+    label: "Issue",
+    icon: ArrowUpFromLine,
+    color: "bg-blue-600 hover:bg-blue-700",
+  },
+  {
+    type: "RETURN" as const,
+    label: "Return",
+    icon: RotateCcw,
+    color: "bg-amber-600 hover:bg-amber-700",
+  },
+];
+
+const consumableActions = [
+  {
+    type: "IN" as const,
+    label: "Receive stock",
+    icon: ArrowDownToLine,
+    color: "bg-emerald-600 hover:bg-emerald-700",
+  },
+  {
+    type: "OUT" as const,
+    label: "Release",
+    icon: ArrowUpFromLine,
+    color: "bg-blue-600 hover:bg-blue-700",
+  },
 ];
 
 export function ScanResult({ item, onClear }: ScanResultProps) {
   const router = useRouter();
+  const isConsumable = item.inventoryType === INVENTORY_TYPES.CONSUMABLE;
+  const transactionActions = useMemo(
+    () => (isConsumable ? consumableActions : borrowableActions),
+    [isConsumable]
+  );
+
   const [selectedType, setSelectedType] = useState<"IN" | "OUT" | "RETURN" | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
@@ -59,10 +104,15 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
     getBorrowers().then(setBorrowers).catch(() => setBorrowers([]));
   }, []);
 
+  useEffect(() => {
+    setSelectedType(null);
+    setBorrowerId("");
+  }, [item.id]);
+
   async function handleSubmit() {
     if (!selectedType) return;
     if ((selectedType === "OUT" || selectedType === "RETURN") && !borrowerId) {
-      toast.error("Select a borrower (student) for issuance or return");
+      toast.error("Select a requester for issuance, release, or return");
       return;
     }
     setIsSubmitting(true);
@@ -73,12 +123,17 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
         type: selectedType,
         quantity,
         notes: notes || undefined,
-        borrowerId:
-          selectedType === "IN" ? undefined : borrowerId || undefined,
+        borrowerId: selectedType === "IN" ? undefined : borrowerId || undefined,
       });
-      toast.success(
-        `${selectedType === "IN" ? "Received" : selectedType === "OUT" ? "Issued" : "Returned"} ${quantity} of ${item.name}`
-      );
+      const verb =
+        selectedType === "IN"
+          ? "Received"
+          : selectedType === "OUT"
+            ? isConsumable
+              ? "Released"
+              : "Issued"
+            : "Returned";
+      toast.success(`${verb} ${quantity} of ${item.name}`);
       onClear();
       router.refresh();
     } catch (error) {
@@ -108,6 +163,9 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
           )}
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="outline">{item.category.name}</Badge>
+            <Badge variant="outline">
+              {INVENTORY_TYPE_LABELS[item.inventoryType] ?? item.inventoryType}
+            </Badge>
             <Badge variant={isLow ? "destructive" : "secondary"}>
               Stock: {item.currentStock}
             </Badge>
@@ -116,7 +174,9 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
 
         <div>
           <Label className="text-sm font-medium">Select action</Label>
-          <div className="mt-2 grid grid-cols-3 gap-2">
+          <div
+            className={`mt-2 grid gap-2 ${isConsumable ? "grid-cols-2" : "grid-cols-3"}`}
+          >
             {transactionActions.map((action) => (
               <Button
                 key={action.type}
@@ -135,22 +195,22 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
           <div className="space-y-4">
             {(selectedType === "OUT" || selectedType === "RETURN") && (
               <div className="space-y-2">
-                <Label>Borrower (student)</Label>
+                <Label>Requester</Label>
                 <Select value={borrowerId} onValueChange={(val) => setBorrowerId(val ?? "")}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select registered borrower" />
+                    <SelectValue placeholder="Select registered requester" />
                   </SelectTrigger>
                   <SelectContent>
                     {borrowers.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
-                        {b.fullName} ({b.studentId})
+                        {formatRequesterLine(b)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {borrowers.length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Register borrowers under Borrowers (students) first.
+                    Register requesters under Requesters first.
                   </p>
                 )}
               </div>
@@ -180,7 +240,14 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
               disabled={isSubmitting || quantity < 1}
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm {selectedType === "IN" ? "Receive" : selectedType === "OUT" ? "Issue" : "Return"}
+              Confirm{" "}
+              {selectedType === "IN"
+                ? "Receive"
+                : selectedType === "OUT"
+                  ? isConsumable
+                    ? "Release"
+                    : "Issue"
+                  : "Return"}
             </Button>
           </div>
         )}

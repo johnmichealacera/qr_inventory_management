@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { INVENTORY_TYPES } from "@/lib/constants";
 
 function escapeCsv(value: string): string {
   if (value.includes(",") || value.includes('"') || value.includes("\n")) {
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest) {
   const itemId = searchParams.get("itemId") ?? undefined;
   const type = searchParams.get("type") ?? undefined;
   const borrowerId = searchParams.get("borrowerId") ?? undefined;
+  const inventoryType = searchParams.get("inventoryType") ?? undefined;
   const startDate = searchParams.get("startDate") ?? undefined;
   const endDate = searchParams.get("endDate") ?? undefined;
 
@@ -31,6 +33,12 @@ export async function GET(req: NextRequest) {
   if (itemId) where.itemId = itemId;
   if (type) where.type = type;
   if (borrowerId) where.borrowerId = borrowerId;
+  if (
+    inventoryType === INVENTORY_TYPES.BORROWABLE ||
+    inventoryType === INVENTORY_TYPES.CONSUMABLE
+  ) {
+    where.item = { inventoryType };
+  }
 
   if (startDate || endDate) {
     const createdAt: Record<string, Date> = {};
@@ -46,9 +54,16 @@ export async function GET(req: NextRequest) {
   const rows = await db.transaction.findMany({
     where,
     include: {
-      item: { select: { name: true } },
+      item: { select: { name: true, inventoryType: true } },
       user: { select: { name: true } },
-      borrower: { select: { fullName: true, studentId: true } },
+      borrower: {
+        select: {
+          fullName: true,
+          studentId: true,
+          personType: true,
+          department: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
     take: 10_000,
@@ -57,10 +72,13 @@ export async function GET(req: NextRequest) {
   const header = [
     "Date (ISO)",
     "Item",
+    "Inventory type",
     "Type",
     "Quantity",
-    "Borrower name",
-    "Student ID",
+    "Requester name",
+    "ID number",
+    "Person type",
+    "Department",
     "Recorded by",
     "Notes",
   ];
@@ -72,10 +90,13 @@ export async function GET(req: NextRequest) {
       [
         escapeCsv(r.createdAt.toISOString()),
         escapeCsv(r.item.name),
+        escapeCsv(r.item.inventoryType),
         escapeCsv(r.type),
         String(r.quantity),
         escapeCsv(r.borrower?.fullName ?? ""),
         escapeCsv(r.borrower?.studentId ?? ""),
+        escapeCsv(r.borrower?.personType ?? ""),
+        escapeCsv(r.borrower?.department ?? ""),
         escapeCsv(r.user.name),
         escapeCsv(r.notes ?? ""),
       ].join(",")

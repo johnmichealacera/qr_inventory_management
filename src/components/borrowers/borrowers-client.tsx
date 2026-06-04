@@ -13,7 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,13 +30,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, GraduationCap } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { PERSON_TYPE_LABELS, PERSON_TYPES } from "@/lib/constants";
+import type { PersonTypeName } from "@/lib/constants";
 
 interface Borrower {
   id: string;
   fullName: string;
   studentId: string;
+  personType: string;
+  department: string;
   programSection: string | null;
   contactPhone: string | null;
 }
@@ -49,21 +60,21 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
             render={
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Register borrower
+                Register requester
               </Button>
             }
           />
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Register student / borrower</DialogTitle>
+              <DialogTitle>Register requester</DialogTitle>
               <DialogDescription>
-                College of Criminology — for issuance and return tracking
+                Students, staff, or faculty — used for borrow and consumable release tracking
               </DialogDescription>
             </DialogHeader>
             <BorrowerForm
               onSubmit={async (data) => {
                 await createBorrower(data);
-                toast.success("Borrower registered");
+                toast.success("Requester registered");
                 setIsCreateOpen(false);
                 router.refresh();
               }}
@@ -75,8 +86,8 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
       {initialBorrowers.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <GraduationCap className="h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-4 text-muted-foreground">No borrowers registered yet</p>
+            <Users className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 text-muted-foreground">No requesters registered yet</p>
           </CardContent>
         </Card>
       ) : (
@@ -85,8 +96,10 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
             <thead>
               <tr className="border-b bg-muted/50 text-left">
                 <th className="p-3 font-medium">Name</th>
-                <th className="p-3 font-medium">Student ID</th>
-                <th className="p-3 font-medium">Program / Section</th>
+                <th className="p-3 font-medium">ID number</th>
+                <th className="p-3 font-medium">Type</th>
+                <th className="p-3 font-medium">Department</th>
+                <th className="p-3 font-medium">Program / section</th>
                 <th className="p-3 font-medium">Contact</th>
                 <th className="p-3 text-right font-medium">Actions</th>
               </tr>
@@ -96,6 +109,10 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                 <tr key={b.id} className="border-b last:border-0">
                   <td className="p-3 font-medium">{b.fullName}</td>
                   <td className="p-3 text-muted-foreground">{b.studentId}</td>
+                  <td className="p-3 text-muted-foreground">
+                    {PERSON_TYPE_LABELS[b.personType as PersonTypeName] ?? b.personType}
+                  </td>
+                  <td className="p-3 text-muted-foreground">{b.department}</td>
                   <td className="p-3 text-muted-foreground">{b.programSection ?? "—"}</td>
                   <td className="p-3 text-muted-foreground">{b.contactPhone ?? "—"}</td>
                   <td className="p-3 text-right">
@@ -118,20 +135,22 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                         />
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Edit borrower</DialogTitle>
-                            <DialogDescription>Update student information</DialogDescription>
+                            <DialogTitle>Edit requester</DialogTitle>
+                            <DialogDescription>Update requester information</DialogDescription>
                           </DialogHeader>
                           <BorrowerForm
                             defaultValues={{
                               fullName: b.fullName,
                               studentId: b.studentId,
+                              personType: b.personType as CreateBorrowerInput["personType"],
+                              department: b.department,
                               programSection: b.programSection ?? "",
                               contactPhone: b.contactPhone ?? "",
                             }}
                             submitLabel="Save"
                             onSubmit={async (data) => {
                               await updateBorrower(b.id, data);
-                              toast.success("Borrower updated");
+                              toast.success("Requester updated");
                               setEditing(null);
                               router.refresh();
                             }}
@@ -147,7 +166,7 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                             if (!confirm(`Remove "${b.fullName}" from the registry?`)) return;
                             try {
                               await deleteBorrower(b.id);
-                              toast.success("Borrower removed");
+                              toast.success("Requester removed");
                               router.refresh();
                             } catch (error) {
                               toast.error(
@@ -183,16 +202,22 @@ function BorrowerForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateBorrowerInput>({
     resolver: zodResolver(createBorrowerSchema),
     defaultValues: {
       fullName: defaultValues?.fullName ?? "",
       studentId: defaultValues?.studentId ?? "",
+      personType: defaultValues?.personType ?? PERSON_TYPES.STUDENT,
+      department: defaultValues?.department ?? "",
       programSection: defaultValues?.programSection ?? "",
       contactPhone: defaultValues?.contactPhone ?? "",
     },
   });
+
+  const personType = watch("personType");
 
   async function onFormSubmit(data: CreateBorrowerInput) {
     try {
@@ -212,10 +237,52 @@ function BorrowerForm({
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="studentId">Student ID</Label>
-        <Input id="studentId" placeholder="2024-00001" {...register("studentId")} />
+        <Label htmlFor="personType">Person type</Label>
+        <Select
+          value={personType}
+          onValueChange={(val) =>
+            val && setValue("personType", val as CreateBorrowerInput["personType"])
+          }
+        >
+          <SelectTrigger id="personType">
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={PERSON_TYPES.STUDENT}>
+              {PERSON_TYPE_LABELS.STUDENT}
+            </SelectItem>
+            <SelectItem value={PERSON_TYPES.STAFF}>{PERSON_TYPE_LABELS.STAFF}</SelectItem>
+            <SelectItem value={PERSON_TYPES.FACULTY}>
+              {PERSON_TYPE_LABELS.FACULTY}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.personType && (
+          <p className="text-xs text-destructive">{errors.personType.message}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="studentId">ID number</Label>
+        <Input
+          id="studentId"
+          placeholder={
+            personType === PERSON_TYPES.STUDENT ? "2024-00001" : "EMP-00123"
+          }
+          {...register("studentId")}
+        />
         {errors.studentId && (
           <p className="text-xs text-destructive">{errors.studentId.message}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="department">Department</Label>
+        <Input
+          id="department"
+          placeholder="College of Criminology"
+          {...register("department")}
+        />
+        {errors.department && (
+          <p className="text-xs text-destructive">{errors.department.message}</p>
         )}
       </div>
       <div className="space-y-2">

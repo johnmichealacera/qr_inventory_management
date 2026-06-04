@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getItemById, getItemStock } from "@/server/items";
-import { PageHeader } from "@/components/layout/page-header";
 import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
+import { INVENTORY_TYPES } from "@/lib/constants";
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
@@ -16,18 +17,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { TRANSACTION_TYPE_LABELS, formatRequesterLine } from "@/lib/constants";
+import {
+  CONSUMABLE_TRANSACTION_TYPE_LABELS,
+  formatRequesterLine,
+} from "@/lib/constants";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ItemDetailPage({ params }: PageProps) {
+export default async function ConsumableDetailPage({ params }: PageProps) {
   const { id } = await params;
   const session = await auth();
   const isAdmin = session?.user?.role === "Admin";
   const item = await getItemById(id);
-  if (!item) notFound();
+  if (!item || item.inventoryType !== INVENTORY_TYPES.CONSUMABLE) notFound();
 
   const currentStock = await getItemStock(id);
   const isLow = currentStock <= item.reorderLevel;
@@ -37,8 +41,8 @@ export default async function ItemDetailPage({ params }: PageProps) {
       <PageHeader title={item.name} description={item.description ?? undefined}>
         <ItemDetailActions
           item={item}
-          listPath="/inventory"
-          inventoryType={item.inventoryType}
+          listPath="/consumables"
+          inventoryType={INVENTORY_TYPES.CONSUMABLE}
           currentStock={currentStock}
           transactionCount={item._count.transactions}
         />
@@ -50,7 +54,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Item Information</CardTitle>
+              <CardTitle className="text-base">Item information</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-2 gap-4 text-sm">
@@ -59,7 +63,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                   <dd className="mt-1 font-medium">{item.category.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Current Stock</dt>
+                  <dt className="text-muted-foreground">Current stock</dt>
                   <dd className="mt-1">
                     <Badge variant={isLow ? "destructive" : "secondary"}>
                       {currentStock} units
@@ -67,14 +71,14 @@ export default async function ItemDetailPage({ params }: PageProps) {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Reorder Level</dt>
+                  <dt className="text-muted-foreground">Reorder level</dt>
                   <dd className="mt-1 font-medium">{item.reorderLevel}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Status</dt>
                   <dd className="mt-1">
                     <Badge variant={isLow ? "destructive" : "default"}>
-                      {isLow ? "Low Stock" : "In Stock"}
+                      {isLow ? "Low stock" : "In stock"}
                     </Badge>
                   </dd>
                 </div>
@@ -84,12 +88,12 @@ export default async function ItemDetailPage({ params }: PageProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Recent Transactions</CardTitle>
+              <CardTitle className="text-base">Release history</CardTitle>
             </CardHeader>
             <CardContent>
               {item.transactions.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
-                  No transactions yet
+                  No releases yet
                 </p>
               ) : (
                 <Table>
@@ -97,7 +101,7 @@ export default async function ItemDetailPage({ params }: PageProps) {
                     <TableRow>
                       <TableHead>Type</TableHead>
                       <TableHead>Quantity</TableHead>
-                      <TableHead>Requester</TableHead>
+                      <TableHead>Released to</TableHead>
                       <TableHead>By</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
@@ -115,11 +119,11 @@ export default async function ItemDetailPage({ params }: PageProps) {
                                   : "secondary"
                             }
                           >
-                            {TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type}
+                            {CONSUMABLE_TRANSACTION_TYPE_LABELS[tx.type] ?? tx.type}
                           </Badge>
                         </TableCell>
                         <TableCell>{tx.quantity}</TableCell>
-                        <TableCell className="max-w-[160px] truncate text-muted-foreground text-sm">
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground text-sm">
                           {tx.borrower ? formatRequesterLine(tx.borrower) : "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">

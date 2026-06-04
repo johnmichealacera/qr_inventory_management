@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { INVENTORY_TYPES, PERSON_TYPES } from "@/lib/constants";
 
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -28,6 +29,9 @@ export const createItemSchema = z.object({
   description: z.string().optional(),
   categoryId: z.string().min(1, "Category is required"),
   reorderLevel: z.coerce.number().int().min(0, "Must be 0 or greater").default(10),
+  inventoryType: z
+    .enum([INVENTORY_TYPES.BORROWABLE, INVENTORY_TYPES.CONSUMABLE])
+    .default(INVENTORY_TYPES.BORROWABLE),
 });
 
 export const updateItemSchema = createItemSchema.partial();
@@ -48,14 +52,16 @@ export const transactionSchema = z
       return Boolean(data.borrowerId?.trim());
     },
     {
-      message: "Borrower (student) is required for issuance and return",
+      message: "Requester is required for issuance, release, or return",
       path: ["borrowerId"],
     }
   );
 
 export const createBorrowerSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
-  studentId: z.string().min(1, "Student ID is required"),
+  studentId: z.string().min(1, "ID number is required"),
+  personType: z.enum([PERSON_TYPES.STUDENT, PERSON_TYPES.STAFF, PERSON_TYPES.FACULTY]),
+  department: z.string().min(1, "Department is required"),
   programSection: z.string().optional(),
   contactPhone: z.string().optional(),
 });
@@ -68,6 +74,9 @@ export const reportFilterSchema = z.object({
   itemId: z.string().optional(),
   type: z.enum(["IN", "OUT", "RETURN"]).optional(),
   borrowerId: z.string().optional(),
+  inventoryType: z
+    .enum([INVENTORY_TYPES.BORROWABLE, INVENTORY_TYPES.CONSUMABLE])
+    .optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });

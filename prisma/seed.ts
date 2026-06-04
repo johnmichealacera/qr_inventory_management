@@ -133,18 +133,21 @@ async function main() {
         description: "College of Criminology equipment room",
         categoryId: uniformCat.id,
         reorderLevel: 15,
+        inventoryType: "BORROWABLE" as const,
       },
       {
         name: "Evidence collection kit",
         description: "Sealed consumables for lab practicum",
         categoryId: forensicCat.id,
         reorderLevel: 8,
+        inventoryType: "CONSUMABLE" as const,
       },
       {
         name: "Handcuff training set (practice)",
         description: "Drill hall issuance",
         categoryId: trainingCat.id,
         reorderLevel: 6,
+        inventoryType: "BORROWABLE" as const,
       },
     ];
 
@@ -182,14 +185,26 @@ async function main() {
     {
       fullName: "Ana Maria Santos",
       studentId: "CRIM-2024-001",
+      personType: "STUDENT" as const,
+      department: "College of Criminology",
       programSection: "BSCrim 4A",
       contactPhone: "+639170000001",
     },
     {
       fullName: "Juan Dela Cruz",
       studentId: "CRIM-2024-014",
+      personType: "STUDENT" as const,
+      department: "College of Criminology",
       programSection: "BSCrim 3B",
       contactPhone: "+639170000002",
+    },
+    {
+      fullName: "Prof. Elena Reyes",
+      studentId: "FAC-CRIM-012",
+      personType: "FACULTY" as const,
+      department: "College of Criminology",
+      programSection: null,
+      contactPhone: "+639170000099",
     },
   ];
 
@@ -198,13 +213,15 @@ async function main() {
       where: { studentId: b.studentId },
       update: {
         fullName: b.fullName,
+        personType: b.personType,
+        department: b.department,
         programSection: b.programSection,
         contactPhone: b.contactPhone,
       },
       create: b,
     });
   }
-  console.log("Borrowers (sample):", borrowerSeeds.map((b) => b.studentId).join(", "));
+  console.log("Requesters (sample):", borrowerSeeds.map((b) => b.studentId).join(", "));
 
   console.log("Seed completed successfully!");
   console.log("\nDefault login credentials:");

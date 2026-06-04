@@ -2,10 +2,19 @@
 
 import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
-import { requireAuth, requireRole } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { transactionSchema } from "@/lib/validations";
+import { INVENTORY_TYPES } from "@/lib/constants";
 import { getItemStock } from "@/server/items";
 import { revalidatePath } from "next/cache";
+
+const requesterSelect = {
+  id: true,
+  fullName: true,
+  studentId: true,
+  personType: true,
+  department: true,
+} as const;
 
 export async function createTransaction(data: unknown) {
   const session = await requireRole(["Admin", "Custodian"]);
@@ -14,21 +23,33 @@ export async function createTransaction(data: unknown) {
   const item = await db.item.findUnique({ where: { id: parsed.itemId } });
   if (!item) throw new Error("Item not found");
 
+  if (item.inventoryType === INVENTORY_TYPES.CONSUMABLE && parsed.type === "RETURN") {
+    throw new Error("Consumable items cannot be returned; use Release to issue stock.");
+  }
+
   if (parsed.type === "OUT" || parsed.type === "RETURN") {
     if (!parsed.borrowerId?.trim()) {
-      throw new Error("Borrower (student) is required for issuance and return");
+      throw new Error("Requester is required for issuance, release, or return");
     }
     const borrower = await db.borrower.findUnique({
       where: { id: parsed.borrowerId.trim() },
     });
-    if (!borrower) throw new Error("Borrower not found");
+    if (!borrower) throw new Error("Requester not found");
   }
 
   if (parsed.type === "OUT") {
     const currentStock = await getItemStock(parsed.itemId);
     if (currentStock < parsed.quantity) {
-      throw new Error(`Insufficient stock. Current: ${currentStock}, Requested: ${parsed.quantity}`);
+      throw new Error(
+        `Insufficient stock. Current: ${currentStock}, Requested: ${parsed.quantity}`
+      );
     }
+  }
+
+  if (parsed.type === "RETURN" && item.inventoryType === INVENTORY_TYPES.BORROWABLE) {
+    const currentStock = await getItemStock(parsed.itemId);
+    // Return adds stock; no upper bound check required
+    void currentStock;
   }
 
   const transaction = await db.transaction.create({
@@ -44,13 +65,18 @@ export async function createTransaction(data: unknown) {
     include: {
       item: true,
       user: { select: { id: true, name: true } },
-      borrower: { select: { id: true, fullName: true, studentId: true } },
+      borrower: { select: requesterSelect },
     },
   });
 
+  const actionLabel =
+    item.inventoryType === INVENTORY_TYPES.CONSUMABLE && parsed.type === "OUT"
+      ? "RELEASE"
+      : parsed.type;
+
   await createAuditLog({
     userId: session.user.id,
-    action: `TRANSACTION_${parsed.type}`,
+    action: `TRANSACTION_${actionLabel}`,
     entity: "Transaction",
     entityId: transaction.id,
     details: `${parsed.type} ${parsed.quantity} of ${item.name}${transaction.borrower ? ` → ${transaction.borrower.fullName}` : ""}`,
@@ -58,6 +84,7 @@ export async function createTransaction(data: unknown) {
 
   revalidatePath("/dashboard");
   revalidatePath("/inventory");
+  revalidatePath("/consumables");
   revalidatePath("/transactions");
   revalidatePath("/reports");
   return transaction;
@@ -69,6 +96,7 @@ export async function getTransactions(params?: {
   itemId?: string;
   type?: string;
   borrowerId?: string;
+  inventoryType?: string;
   startDate?: string;
   endDate?: string;
 }) {
@@ -83,6 +111,10 @@ export async function getTransactions(params?: {
   if (params?.itemId) where.itemId = params.itemId;
   if (params?.type) where.type = params.type;
   if (params?.borrowerId) where.borrowerId = params.borrowerId;
+
+  if (params?.inventoryType) {
+    where.item = { inventoryType: params.inventoryType };
+  }
 
   if (params?.startDate || params?.endDate) {
     const createdAt: Record<string, Date> = {};
@@ -99,9 +131,9 @@ export async function getTransactions(params?: {
     db.transaction.findMany({
       where,
       include: {
-        item: { select: { id: true, name: true } },
+        item: { select: { id: true, name: true, inventoryType: true } },
         user: { select: { id: true, name: true } },
-        borrower: { select: { id: true, fullName: true, studentId: true } },
+        borrower: { select: requesterSelect },
       },
       orderBy: { createdAt: "desc" },
       skip,
@@ -118,12 +150,30 @@ export async function getTransactions(params?: {
   };
 }
 
+/** OUT transactions on consumable items = releases / consumption log */
+export async function getConsumableReleases(params?: {
+  page?: number;
+  limit?: number;
+  borrowerId?: string;
+  itemId?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
+  await requireRole(["Admin", "Custodian", "Auditor"]);
+
+  return getTransactions({
+    ...params,
+    type: "OUT",
+    inventoryType: INVENTORY_TYPES.CONSUMABLE,
+  });
+}
+
 export async function getRecentTransactions(limit = 5) {
   return db.transaction.findMany({
     include: {
-      item: { select: { id: true, name: true } },
+      item: { select: { id: true, name: true, inventoryType: true } },
       user: { select: { id: true, name: true } },
-      borrower: { select: { id: true, fullName: true, studentId: true } },
+      borrower: { select: requesterSelect },
     },
     orderBy: { createdAt: "desc" },
     take: limit,

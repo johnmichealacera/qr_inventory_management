@@ -17,7 +17,7 @@ interface Category {
   name: string;
 }
 
-export default function NewItemPage() {
+export default function NewConsumablePage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,9 +31,9 @@ export default function NewItemPage() {
 
   async function handleSubmit(data: CreateItemInput) {
     try {
-      await createItem({ ...data, inventoryType: INVENTORY_TYPES.BORROWABLE });
-      toast.success("Item created successfully");
-      router.push("/inventory");
+      await createItem({ ...data, inventoryType: INVENTORY_TYPES.CONSUMABLE });
+      toast.success("Consumable item created");
+      router.push("/consumables");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create item");
     }
@@ -50,22 +50,22 @@ export default function NewItemPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Add borrowable item"
-        description="Equipment that can be issued and returned"
+        title="Add consumable"
+        description="Items that are issued once and not returned (e.g. gloves, forms)"
       />
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle>Item Details</CardTitle>
+          <CardTitle>Item details</CardTitle>
         </CardHeader>
         <CardContent>
           {categories.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Please create a category first before adding items.
+              Create a category first before adding items.
             </p>
           ) : (
             <ItemForm
               categories={categories}
-              fixedInventoryType={INVENTORY_TYPES.BORROWABLE}
+              fixedInventoryType={INVENTORY_TYPES.CONSUMABLE}
               onSubmit={handleSubmit}
             />
           )}

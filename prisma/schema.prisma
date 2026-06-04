@@ -30,11 +30,14 @@ model User {
   @@map("users")
 }
 
-/// Student / borrower for issuance and return tracking (College of Criminology)
+/// Requester registry: students, staff, or faculty (borrow / consume tracking)
 model Borrower {
   id               String        @id @default(cuid())
   fullName         String
+  /// Unique ID number (student ID, employee ID, etc.)
   studentId        String        @unique
+  personType       PersonType    @default(STUDENT)
+  department       String
   programSection   String?
   contactPhone     String?
   createdAt        DateTime      @default(now())
@@ -42,6 +45,12 @@ model Borrower {
   transactions     Transaction[]
 
   @@map("borrowers")
+}
+
+enum PersonType {
+  STUDENT
+  STAFF
+  FACULTY
 }
 
 model Category {
@@ -52,19 +61,25 @@ model Category {
   @@map("categories")
 }
 
+enum InventoryType {
+  BORROWABLE
+  CONSUMABLE
+}
+
 /// Inventory item; equipmentProgram defaults to CRIMINOLOGY per study scope
 model Item {
-  id                 String        @id @default(cuid())
+  id                 String          @id @default(cuid())
   name               String
   description        String?
   categoryId         String
-  reorderLevel       Int           @default(10)
-  equipmentProgram   String        @default("CRIMINOLOGY")
-  category           Category      @relation(fields: [categoryId], references: [id])
+  reorderLevel       Int             @default(10)
+  equipmentProgram   String          @default("CRIMINOLOGY")
+  inventoryType      InventoryType   @default(BORROWABLE)
+  category           Category        @relation(fields: [categoryId], references: [id])
   transactions       Transaction[]
   qrCode             QRCode?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
   @@map("items")
 }
@@ -77,7 +92,7 @@ model Transaction {
   type       TransactionType
   quantity   Int
   notes      String?
-  item       Item            @relation(fields: [itemId], references: [id])
+  item       Item            @relation(fields: [itemId], references: [id], onDelete: Restrict)
   user       User            @relation(fields: [userId], references: [id])
   borrower   Borrower?       @relation(fields: [borrowerId], references: [id])
   createdAt  DateTime        @default(now())
