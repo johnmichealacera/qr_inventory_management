@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Defense Demo Flow — QR Inventory Management System · College of Criminology</title>
+<title>Defense Demo Flow — QR Inventory Management System · General Supplies Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -328,17 +328,17 @@ body{
         <span>Inventory Management System</span>
       </h1>
       <p class="hero-sub">
-        A complete equipment management workflow — from Admin setup and item registration with auto-generated QR codes, to Custodian-driven issuance and returns, and Auditor oversight with full reports. Three roles, ten scenes, every action enforced by the system.
+        A complete general supplies workflow — borrowable items (issue &amp; return), consumable supplies (receive &amp; release), requester-linked accountability, and Auditor read-only oversight. Twelve scenes walk through every role with RBAC enforced in the UI and on the server.
       </p>
       <div class="stat-row">
-        <div class="stat-pill"><div class="stat-num">10</div><div class="stat-lbl">Scenes</div></div>
+        <div class="stat-pill"><div class="stat-num">12</div><div class="stat-lbl">Scenes</div></div>
         <div class="stat-pill"><div class="stat-num">3</div><div class="stat-lbl">Staff Roles</div></div>
-        <div class="stat-pill"><div class="stat-num" style="color:#0891b2;">9</div><div class="stat-lbl">Modules</div></div>
-        <div class="stat-pill"><div class="stat-num" style="color:#059669;">3</div><div class="stat-lbl">Transaction Types</div></div>
+        <div class="stat-pill"><div class="stat-num" style="color:#0891b2;">10</div><div class="stat-lbl">Modules</div></div>
+        <div class="stat-pill"><div class="stat-num" style="color:#059669;">2</div><div class="stat-lbl">Inventory Types</div></div>
       </div>
       <p style="font-size:12px;color:var(--t45);margin-top:20px;">
-        College of Criminology · Equipment Program: CRIMINOLOGY<br>
-        Stack: Next.js 16 · TypeScript · PostgreSQL · Prisma · Auth.js v5 · QR Code scan &amp; generation
+        General Supplies Office · Borrowable + Consumable inventory<br>
+        Stack: Next.js 16 · TypeScript · PostgreSQL · Prisma · Auth.js v5 · QR scan &amp; generation
       </p>
     </div>
   </div>
@@ -359,15 +359,15 @@ body{
         <div class="account-name">System Administrator</div>
         <div class="account-login">username: admin</div>
         <div class="account-pass">password: password123</div>
-        <div class="account-scope">Full access · all 9 modules</div>
+        <div class="account-scope">Full access · all 10 modules · delete items</div>
       </div>
 
       <div class="account-card" style="--role-color:var(--custodian)">
         <div class="account-role">Custodian</div>
-        <div class="account-name">Equipment Custodian</div>
+        <div class="account-name">Supplies Custodian</div>
         <div class="account-login">username: custodian</div>
         <div class="account-pass">password: password123</div>
-        <div class="account-scope">Inventory · Transactions · Scanner · Borrowers · Reports</div>
+        <div class="account-scope">Inventory · Consumables · Scanner · Requesters · Transactions</div>
       </div>
 
       <div class="account-card" style="--role-color:var(--auditor)">
@@ -375,7 +375,7 @@ body{
         <div class="account-name">Auditor User</div>
         <div class="account-login">username: auditor</div>
         <div class="account-pass">password: password123</div>
-        <div class="account-scope">View-only · Reports · Audit Logs</div>
+        <div class="account-scope">Read-only · Reports · CSV · Audit Logs (no create/edit)</div>
       </div>
 
     </div>
@@ -394,13 +394,14 @@ body{
           </thead>
           <tbody>
             <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Dashboard</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Inventory</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓ (read)</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Categories</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓ (read)</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Borrowers</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">QR Scanner</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Transactions</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓ (read)</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Reports</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td></tr>
-            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Audit Logs</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td><td style="text-align:center;">✓</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Borrowable inventory</td><td style="text-align:center;">✓ full</td><td style="text-align:center;">✓ no delete</td><td style="text-align:center;">✓ read</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Consumables + release log</td><td style="text-align:center;">✓ full</td><td style="text-align:center;">✓ no delete</td><td style="text-align:center;">✓ read</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Categories</td><td style="text-align:center;">✓ full</td><td style="text-align:center;">✓ no delete</td><td style="text-align:center;">✓ read</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Requesters</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">QR Scanner</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Transactions</td><td style="text-align:center;">✓ record</td><td style="text-align:center;">✓ record</td><td style="text-align:center;">✓ read</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;background:#fafafa;"><td style="padding:6px 12px;color:#334155;">Reports + CSV</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td><td style="text-align:center;">✓</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px 12px;color:#334155;">Audit Logs</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td><td style="text-align:center;">✓</td></tr>
             <tr><td style="padding:6px 12px;color:#334155;">User Management</td><td style="text-align:center;">✓</td><td style="text-align:center;">—</td><td style="text-align:center;">—</td></tr>
           </tbody>
         </table>
@@ -488,10 +489,10 @@ body{
         <div style="background:#ffffff;border:1px solid var(--admin-border);border-radius:8px;padding:10px 12px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--admin);margin-bottom:6px;">Sample categories (seeded)</div>
           <ul style="font-size:12px;color:#334155;line-height:1.8;padding-left:14px;">
-            <li>Criminology — Uniforms &amp; Gear</li>
-            <li>Criminology — Training Equipment</li>
-            <li>Criminology — Forensic Supplies</li>
-            <li>Criminology — Documentation</li>
+            <li>Office Supplies &amp; Stationery</li>
+            <li>Janitorial &amp; Maintenance Supplies</li>
+            <li>IT &amp; Office Equipment (borrowable)</li>
+            <li>Forms &amp; Documentation Materials</li>
           </ul>
         </div>
       </div>
@@ -504,7 +505,7 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--admin);">2</div>
-            <div class="action-text">Click <strong>Add Category</strong> — enter a new name, e.g. <em>Criminology — First Aid Supplies</em> → Save</div>
+            <div class="action-text">Click <strong>Add Category</strong> — enter a new name, e.g. <em>Office Supplies — Printing</em> → Save</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--admin);">3</div>
@@ -535,96 +536,33 @@ body{
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════ SCENE 3 — ADD ITEM & QR ══ -->
-<section class="slide scene-slide" id="sc3" data-title="Add Item + QR">
+<!-- ══════════════════════════════════════════════ SCENE 3 — REQUESTERS ══ -->
+<section class="slide scene-slide" id="sc3" data-title="Requesters">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 3 · Inventory</div>
-      <h2 class="scene-title">Custodian Adds an Item — QR Code Auto-Generated</h2>
+      <div class="scene-num">Scene 3 · Requesters</div>
+      <h2 class="scene-title">Custodian Registers a Requester (Student, Staff, or Faculty)</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
       <div class="role-block">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="role-avatar" style="background:var(--custodian);">C</div>
           <div>
-            <div class="role-name">Equipment Custodian</div>
-            <div class="role-title">Custodian · College of Criminology</div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">Custodian · General Supplies Office</div>
           </div>
         </div>
         <div class="role-badge" style="background:var(--custodian);">custodian</div>
-        <div class="role-module">Module: <span>Inventory</span></div>
+        <div class="role-module">Module: <span>Requesters</span></div>
         <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
-          Every item added to the system automatically gets its own QR code — no external tool required. The QR value is a unique string tied to the item's database ID.
+          Issuance, return, and consumable <strong>release</strong> all require a registered requester. The registry supports students, staff, and faculty — each with a required <strong>department</strong>.
         </div>
         <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:4px;">QR value format</div>
-          <div style="font-family:monospace;font-size:13px;color:#0e7490;">INV-&lt;item-id&gt;</div>
-          <div style="font-size:11px;color:var(--t45);margin-top:3px;">e.g. INV-cm5ab3k2f0000xyz12345</div>
-        </div>
-      </div>
-      <div class="actions-block">
-        <div class="action-list">
-          <div class="action-list-head">Actions</div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">1</div>
-            <div class="action-text">Log in as <strong>custodian</strong> → navigate to <strong>Inventory</strong></div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Click <strong>Add Item</strong> — fill in: name (e.g. <em>Baton — Drill Training</em>), description, category (<em>Training Equipment</em>), reorder level (<em>10</em>)</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">3</div>
-            <div class="action-text">Click <strong>Save</strong> — item appears in the table; a QR code is generated in the background automatically</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">4</div>
-            <div class="action-text">Click the item row to open the <strong>Item Detail</strong> page — the QR code image is displayed on the right</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">5</div>
-            <div class="action-text">Click <strong>Download QR</strong> — saves a PNG file ready for printing and labeling the physical item</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">6</div>
-            <div class="action-text">Note the current stock: <strong>0</strong> — stock is computed live from all IN/OUT/RETURN transactions; no manual stock field</div>
-          </div>
-        </div>
-        <div class="rbac-callout">
-          <div class="rbac-callout-label">Design highlight</div>
-          Stock is never stored directly — it is computed from the transaction ledger every time. <strong>IN</strong> adds stock; <strong>OUT</strong> deducts it; <strong>RETURN</strong> adds it back. This makes the audit trail the single source of truth.
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════ SCENE 4 — REGISTER BORROWER ══ -->
-<section class="slide scene-slide" id="sc4" data-title="Register Borrower" style="background:var(--deep);">
-  <div class="slide-inner">
-    <div class="reveal">
-      <div class="scene-num">Scene 4 · Borrowers</div>
-      <h2 class="scene-title">Custodian Registers a Student Borrower</h2>
-    </div>
-    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
-      <div class="role-block">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="role-avatar" style="background:var(--custodian);">C</div>
-          <div>
-            <div class="role-name">Equipment Custodian</div>
-            <div class="role-title">Custodian · College of Criminology</div>
-          </div>
-        </div>
-        <div class="role-badge" style="background:var(--custodian);">custodian</div>
-        <div class="role-module">Module: <span>Borrowers</span></div>
-        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
-          Every OUT transaction requires a linked borrower. Registering students here creates the registry used during issuance — equipment is always tied to the student who received it.
-        </div>
-        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:6px;">Seeded students</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:6px;">Seeded requesters</div>
           <div style="font-size:12px;color:#334155;line-height:1.7;">
-            <strong>Ana Maria Santos</strong> — CRIM-2024-001 · BSCrim 4A<br>
-            <strong>Juan Dela Cruz</strong> — CRIM-2024-014 · BSCrim 3B
+            <strong>Ana Maria Santos</strong> — Student · CRIM-2024-001 · BSCrim 4A<br>
+            <strong>Juan Dela Cruz</strong> — Student · CRIM-2024-014 · BSCrim 3B<br>
+            <strong>Prof. Elena Reyes</strong> — Faculty · FAC-CRIM-012 (for consumable release demo)
           </div>
         </div>
       </div>
@@ -633,44 +571,146 @@ body{
           <div class="action-list-head">Actions</div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">1</div>
-            <div class="action-text">Navigate to <strong>Borrowers</strong> — see the two seeded student records</div>
+            <div class="action-text">Navigate to <strong>Requesters</strong> — see seeded students and faculty</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Click <strong>Add Borrower</strong> — enter: full name, student ID (e.g. <em>CRIM-2024-032</em>), program &amp; section (<em>BSCrim 2C</em>), phone (optional)</div>
+            <div class="action-text">Click <strong>Register requester</strong> — person type (<em>Staff</em>), full name, ID number, <strong>department</strong> (required), program/section optional</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">3</div>
-            <div class="action-text">Save — the new student appears in the borrower table with their student ID</div>
+            <div class="action-text">Save — requester appears with type and department columns</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">4</div>
-            <div class="action-text">This student is now selectable in the <strong>borrower dropdown</strong> when recording an OUT transaction</div>
+            <div class="action-text">Requester is now selectable when recording <strong>Issue</strong>, <strong>Return</strong>, or <strong>Release</strong></div>
           </div>
         </div>
         <div class="rbac-callout">
           <div class="rbac-callout-label">RBAC in action</div>
-          The <strong>Borrowers</strong> module is completely hidden from Auditors — neither the sidebar link nor the route is accessible. Auditors can view transaction records that reference borrowers, but they cannot modify the borrower registry.
+          <strong>Requesters</strong> is hidden from Auditors. They see requester names in transaction and report tables but cannot open this module or change the registry.
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════ SCENE 5 — INITIAL STOCK IN ══ -->
-<section class="slide scene-slide" id="sc5" data-title="Stock IN">
+<!-- ══════════════════════════════════════════════ SCENE 4 — BORROWABLE ITEM + QR ══ -->
+<section class="slide scene-slide" id="sc4" data-title="Borrowable + QR" style="background:var(--deep);">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 5 · Transactions</div>
-      <h2 class="scene-title">Custodian Records an IN Transaction (Stock Received)</h2>
+      <div class="scene-num">Scene 4 · Borrowable inventory</div>
+      <h2 class="scene-title">Custodian Adds a Borrowable Item — QR Auto-Generated</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
       <div class="role-block">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="role-avatar" style="background:var(--custodian);">C</div>
           <div>
-            <div class="role-name">Equipment Custodian</div>
-            <div class="role-title">Custodian · College of Criminology</div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">Custodian · General Supplies Office</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>Borrowable inventory</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          <strong>Borrowable inventory</strong> is for items that are issued and returned (e.g. projectors, laptops). Each item gets a unique QR code on creation.
+        </div>
+        <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:4px;">QR value format</div>
+          <div style="font-family:monospace;font-size:13px;color:#0e7490;">INV-&lt;item-id&gt;</div>
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Log in as <strong>custodian</strong> → <strong>Borrowable inventory</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Click <strong>Add Item</strong> — name (e.g. <em>LCD Projector — Room A</em>), category <em>IT &amp; Office Equipment</em>, reorder level <em>5</em> — type is fixed as <strong>Borrowable</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Open item detail → <strong>Download QR</strong> for physical labeling</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text">Stock shows <strong>0</strong> until an IN transaction is recorded — ledger-based, not a manual field</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Deletion policy</div>
+          Only <strong>Admin</strong> can delete items, and only when <strong>stock is 0</strong> and there are <strong>no transactions</strong>. A notice on the list explains this rule.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 5 — CONSUMABLES ══ -->
+<section class="slide scene-slide" id="sc5" data-title="Consumables">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 5 · Consumables</div>
+      <h2 class="scene-title">Custodian Adds a Consumable &amp; Views Release Log</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">Consumables — not returned</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>Consumables</span><span>Release log tab</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          Consumables are released once (no return). The <strong>Release log</strong> tab lists every OUT on consumable items with requester and department.
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text">Navigate to <strong>Consumables</strong> → <strong>Add consumable</strong> (e.g. <em>A4 Bond Paper — Ream</em>)</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Switch to <strong>Release log</strong> tab — paginated list of who received released stock</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">QR Scanner on consumables shows only <strong>Receive</strong> and <strong>Release</strong> — no Return button</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Two inventory types</div>
+          Borrowable: IN · Issue (OUT) · Return. Consumable: IN · Release (OUT) only. Stock formula adapts per type.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 6 — STOCK IN ══ -->
+<section class="slide scene-slide" id="sc6" data-title="Stock IN">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 6 · Transactions</div>
+      <h2 class="scene-title">Custodian Records IN — Stock Received (Borrowable)</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">Custodian · General Supplies Office</div>
           </div>
         </div>
         <div class="role-badge" style="background:var(--custodian);">custodian</div>
@@ -681,7 +721,7 @@ body{
         <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;margin-top:4px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#059669;margin-bottom:4px;">Transaction Type: IN</div>
           <div style="font-size:12px;color:#334155;line-height:1.6;">
-            No borrower required.<br>
+            No requester required.<br>
             Stock formula: <strong>SUM(IN + RETURN) − SUM(OUT)</strong>
           </div>
         </div>
@@ -695,11 +735,11 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Select type: <strong>IN</strong> — borrower field disappears (not required for IN)</div>
+            <div class="action-text">Select type: <strong>IN</strong> — requester field hidden (not required for IN)</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">3</div>
-            <div class="action-text">Choose item: <em>Baton — Drill Training</em>, quantity: <strong>30</strong>, notes: <em>"Received from procurement — batch 1"</em></div>
+            <div class="action-text">Choose item: <em>LCD Projector — Room A</em>, quantity: <strong>5</strong>, notes: <em>"Received from procurement"</em></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">4</div>
@@ -707,7 +747,7 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">5</div>
-            <div class="action-text">The item now shows <strong>Stock: 30</strong> — computed live from the transaction log</div>
+            <div class="action-text">The item now shows <strong>Stock: 5</strong> — computed live from the transaction log</div>
           </div>
         </div>
         <div class="rbac-callout">
@@ -720,19 +760,19 @@ body{
 </section>
 
 <!-- ══════════════════════════════════════════════ SCENE 6 — QR SCAN + OUT ══ -->
-<section class="slide scene-slide" id="sc6" data-title="QR Scan → Issue OUT" style="background:var(--deep);">
+<section class="slide scene-slide" id="sc7" data-title="QR Scan → Issue OUT" style="background:var(--deep);">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 6 · QR Scanner</div>
-      <h2 class="scene-title">Custodian Scans QR Code to Issue Equipment (OUT)</h2>
+      <div class="scene-num">Scene 7 · QR Scanner</div>
+      <h2 class="scene-title">Custodian Scans QR to Issue Borrowable Item (OUT)</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
       <div class="role-block">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="role-avatar" style="background:var(--custodian);font-size:22px;">📷</div>
           <div>
-            <div class="role-name">Equipment Custodian</div>
-            <div class="role-title">QR Scan — Issuance Flow</div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">QR Scan — Issue (borrowable)</div>
           </div>
         </div>
         <div class="role-badge" style="background:var(--custodian);">custodian</div>
@@ -754,59 +794,59 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Point the camera at the printed QR label on the <em>Baton — Drill Training</em> item</div>
+            <div class="action-text">Scan the QR on <em>LCD Projector — Room A</em> (or paste INV- value manually)</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">3</div>
-            <div class="action-text">Scan is recognized — item name, category, and current stock (<strong>30</strong>) appear on screen immediately</div>
+            <div class="action-text">Item loads — badge shows <strong>Borrowable</strong>, stock <strong>5</strong></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">4</div>
-            <div class="action-text">Select type: <strong>OUT</strong> — borrower dropdown appears (required)</div>
+            <div class="action-text">Select <strong>Issue</strong> — requester dropdown required</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">5</div>
-            <div class="action-text">Select borrower: <em>Ana Maria Santos (CRIM-2024-001)</em>, quantity: <strong>1</strong>, notes: <em>"Drill practicum — June 2"</em></div>
+            <div class="action-text">Select requester: <em>Ana Maria Santos</em> (shows ID, role, department), qty <strong>1</strong></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">6</div>
-            <div class="action-text">Submit → stock drops to <strong>29</strong>; transaction is recorded with the borrower linked</div>
+            <div class="action-text">Submit → stock <strong>4</strong>; issuance linked to requester in ledger</div>
           </div>
         </div>
         <div class="rbac-callout">
           <div class="rbac-callout-label">Accountability on every OUT</div>
-          An OUT transaction without a borrower is <strong>rejected by the system</strong> — the form will not submit. Every issuance is linked to the specific student who received the equipment, creating a borrower-accountable chain of custody.
+          Issue, return, and release without a requester are <strong>rejected</strong> by Zod validation and server rules — every outward movement is attributable.
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════ SCENE 7 — RETURN ══ -->
-<section class="slide scene-slide" id="sc7" data-title="Return Equipment">
+<!-- ══════════════════════════════════════════════ SCENE 8 — RETURN ══ -->
+<section class="slide scene-slide" id="sc8" data-title="Return Equipment">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 7 · Transactions</div>
-      <h2 class="scene-title">Custodian Records Equipment Return</h2>
+      <div class="scene-num">Scene 8 · Transactions</div>
+      <h2 class="scene-title">Custodian Records Borrowable Return</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
       <div class="role-block">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="role-avatar" style="background:var(--custodian);">C</div>
           <div>
-            <div class="role-name">Equipment Custodian</div>
-            <div class="role-title">Custodian · College of Criminology</div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">Custodian · General Supplies Office</div>
           </div>
         </div>
         <div class="role-badge" style="background:var(--custodian);">custodian</div>
         <div class="role-module">Module: <span>QR Scanner</span> · Type: <span style="color:#059669;">RETURN</span></div>
         <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
-          When the student returns the equipment, the custodian scans the same QR code and records a RETURN — the stock is automatically restored.
+          When the requester returns the projector, scan the same QR and record <strong>Return</strong> — stock is restored like an IN.
         </div>
         <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#059669;margin-bottom:4px;">Stock change</div>
-          <div style="font-size:13px;font-weight:700;color:#1e293b;">29 → 30</div>
-          <div style="font-size:11px;color:var(--t45);">RETURN is treated the same as IN for stock calculation</div>
+          <div style="font-size:13px;font-weight:700;color:#1e293b;">4 → 5</div>
+          <div style="font-size:11px;color:var(--t45);">RETURN counts toward stock the same as IN</div>
         </div>
       </div>
       <div class="actions-block">
@@ -814,39 +854,86 @@ body{
           <div class="action-list-head">Actions</div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">1</div>
-            <div class="action-text">Go to <strong>QR Scanner</strong> — scan the same QR on the returned baton</div>
+            <div class="action-text"><strong>QR Scanner</strong> — scan <em>LCD Projector — Room A</em> again</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Item details load — current stock: <strong>29</strong></div>
+            <div class="action-text">Current stock: <strong>4</strong> — select <strong>Return</strong>, requester <em>Ana Maria Santos</em>, qty <strong>1</strong></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">3</div>
-            <div class="action-text">Select type: <strong>RETURN</strong> — select borrower: <em>Ana Maria Santos</em>, quantity: <strong>1</strong></div>
+            <div class="action-text">Submit → stock <strong>5</strong>; RETURN linked to requester</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">4</div>
-            <div class="action-text">Submit → stock restores to <strong>30</strong>; RETURN transaction recorded with borrower linked</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">5</div>
-            <div class="action-text">Navigate to <strong>Transactions</strong> — see all three records: IN · OUT · RETURN in chronological order</div>
+            <div class="action-text"><strong>Transactions</strong> — show IN · Issue · Return for the borrowable item</div>
           </div>
         </div>
         <div class="rbac-callout">
-          <div class="rbac-callout-label">Complete item lifecycle demonstrated</div>
-          You have now shown <strong>IN → OUT → RETURN</strong> — the full lifecycle of a single piece of equipment, every step recorded with user, borrower, timestamp, and quantity. No paper form, no manual ledger, no guesswork.
+          <div class="rbac-callout-label">Borrowable lifecycle complete</div>
+          <strong>Receive → Issue → Return</strong> — every step with custodian, requester, timestamp, and quantity. Consumables skip Return (next scene).
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════ SCENE 8 — DASHBOARD ══ -->
-<section class="slide scene-slide" id="sc8" data-title="Dashboard" style="background:var(--deep);">
+<!-- ══════════════════════════════════════════════ SCENE 9 — CONSUMABLE RELEASE ══ -->
+<section class="slide scene-slide" id="sc9" data-title="Consumable Release" style="background:var(--deep);">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 8 · Monitoring</div>
+      <div class="scene-num">Scene 9 · Consumables</div>
+      <h2 class="scene-title">Custodian Receives Stock &amp; Releases a Consumable</h2>
+    </div>
+    <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
+      <div class="role-block">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="role-avatar" style="background:var(--custodian);">C</div>
+          <div>
+            <div class="role-name">Supplies Custodian</div>
+            <div class="role-title">Consumable — one-way release</div>
+          </div>
+        </div>
+        <div class="role-badge" style="background:var(--custodian);">custodian</div>
+        <div class="role-module">Module: <span>Transactions</span> or <span>QR Scanner</span></div>
+        <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
+          On <em>A4 Bond Paper — Ream</em>: record <strong>Receive</strong> (IN), then <strong>Release</strong> (OUT) to a faculty requester. Stock does not come back.
+        </div>
+      </div>
+      <div class="actions-block">
+        <div class="action-list">
+          <div class="action-list-head">Actions</div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">1</div>
+            <div class="action-text"><strong>Transactions</strong> → type <strong>Receive</strong>, item <em>A4 Bond Paper — Ream</em>, qty <strong>50</strong> (no requester)</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">2</div>
+            <div class="action-text">Same item → type <strong>Release</strong>, requester <em>Prof. Elena Reyes</em> (Faculty), qty <strong>5</strong></div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">3</div>
+            <div class="action-text">Stock shows <strong>45</strong> — only Receive and Release affect consumables</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--custodian);">4</div>
+            <div class="action-text"><strong>Consumables → Release log</strong> — new row with item, requester, department, qty, custodian, time</div>
+          </div>
+        </div>
+        <div class="rbac-callout">
+          <div class="rbac-callout-label">Release log = consumable accountability</div>
+          The dedicated tab filters OUT transactions on consumable items — ideal for GSO supply distribution audits without mixing borrowable returns.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ SCENE 10 — DASHBOARD ══ -->
+<section class="slide scene-slide" id="sc10" data-title="Dashboard" style="background:var(--deep);">
+  <div class="slide-inner">
+    <div class="reveal">
+      <div class="scene-num">Scene 10 · Monitoring</div>
       <h2 class="scene-title">Admin Reviews the Live Dashboard</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--admin);--role-bg:var(--admin-bg);--role-border:var(--admin-border);">
@@ -877,11 +964,11 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--admin);">3</div>
-            <div class="action-text"><strong>Recent Transactions</strong> — the latest IN/OUT/RETURN records with item name, user, and time</div>
+            <div class="action-text"><strong>Recent Transactions</strong> — borrowable (Receive/Issue/Return) and consumable (Receive/Release) in one feed</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--admin);">4</div>
-            <div class="action-text">Point out: <em>stock alert threshold</em> is set per-item as the <strong>Reorder Level</strong> field when adding/editing an item</div>
+            <div class="action-text">Low-stock uses per-item <strong>Reorder Level</strong> on both Inventory and Consumables lists</div>
           </div>
         </div>
         <div class="rbac-callout">
@@ -893,12 +980,12 @@ body{
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════ SCENE 9 — REPORTS ══ -->
-<section class="slide scene-slide" id="sc9" data-title="Reports &amp; CSV">
+<!-- ══════════════════════════════════════════════ SCENE 11 — AUDITOR + REPORTS ══ -->
+<section class="slide scene-slide" id="sc11" data-title="Auditor &amp; Reports">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 9 · Reporting</div>
-      <h2 class="scene-title">Auditor Filters Reports &amp; Exports CSV</h2>
+      <div class="scene-num">Scene 11 · Auditor</div>
+      <h2 class="scene-title">Auditor Read-Only Check &amp; Filtered CSV Export</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--auditor);--role-bg:var(--auditor-bg);--role-border:var(--auditor-border);">
       <div class="role-block">
@@ -912,7 +999,7 @@ body{
         <div class="role-badge" style="background:var(--auditor);">auditor</div>
         <div class="role-module">Module: <span>Reports</span></div>
         <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
-          The Auditor can query any combination of date range, item, transaction type, or borrower — then export the filtered result as a CSV for use in Excel or official records.
+          Auditor is <strong>read-only everywhere</strong>: no Add Category, Add consumable, Add item, or edit/delete controls. Reports support date, item, type, requester, and inventory-type filters.
         </div>
       </div>
       <div class="actions-block">
@@ -920,39 +1007,39 @@ body{
           <div class="action-list-head">Actions</div>
           <div class="action-item">
             <div class="action-num" style="background:var(--auditor);">1</div>
-            <div class="action-text">Log in as <strong>auditor</strong> → navigate to <strong>Reports</strong></div>
+            <div class="action-text">Log in as <strong>auditor</strong> → open <strong>Categories</strong>, <strong>Consumables</strong>, <strong>Inventory</strong> — confirm <strong>no Add / Edit / Delete</strong> buttons</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--auditor);">2</div>
-            <div class="action-text">Set <strong>date range</strong> to cover today — click <strong>Apply Filter</strong></div>
+            <div class="action-text"><strong>Reports</strong> → set date range → <strong>Apply Filter</strong></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--auditor);">3</div>
-            <div class="action-text">Filter by <strong>type: OUT</strong> — only issuance records appear, each showing item, borrower name, student ID, quantity, custodian, and timestamp</div>
+            <div class="action-text">Filter <strong>inventory type: Consumable</strong> and type <strong>Release</strong> — see bond-paper release with requester, ID, department</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--auditor);">4</div>
-            <div class="action-text">Clear type filter — filter by <strong>item: Baton — Drill Training</strong> — see the complete IN → OUT → RETURN history for that item</div>
+            <div class="action-text">Filter item <em>LCD Projector — Room A</em> — full Receive → Issue → Return chain for borrowable</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--auditor);">5</div>
-            <div class="action-text">Click <strong>Export CSV</strong> — downloads a file with the current filter applied; open it in Excel to confirm the data</div>
+            <div class="action-text"><strong>Export CSV</strong> with filters applied — open in Excel for GSO records</div>
           </div>
         </div>
         <div class="rbac-callout">
           <div class="rbac-callout-label">RBAC in action</div>
-          Despite having read access to Reports and Audit Logs, the Auditor <strong>cannot create or modify</strong> any record. There is no "Add" button, no edit option, no delete — enforced both in the UI and at the API level via <code style="font-size:11px;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">requireRole()</code> server-side checks.
+          UI hides management actions for Auditor; server uses <code style="font-size:11px;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">canManageInventory</code> and <code style="font-size:11px;background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;">requireRole()</code> so POST/PATCH/DELETE are rejected even if the API is called directly.
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════════════ SCENE 10 — AUDIT LOGS ══ -->
-<section class="slide scene-slide" id="sc10" data-title="Audit Logs" style="background:#ffffff;">
+<!-- ══════════════════════════════════════════════ SCENE 12 — AUDIT LOGS ══ -->
+<section class="slide scene-slide" id="sc12" data-title="Audit Logs" style="background:#ffffff;">
   <div class="slide-inner">
     <div class="reveal">
-      <div class="scene-num">Scene 10 · Closing</div>
+      <div class="scene-num">Scene 12 · Closing</div>
       <h2 class="scene-title">The Complete Audit Trail</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--admin);--role-bg:var(--admin-bg);--role-border:var(--admin-border);">
@@ -975,36 +1062,32 @@ body{
           <div class="action-list-head">Everything that happened this session — all in one view</div>
           <div class="action-item">
             <div class="action-num" style="background:var(--admin);">✓</div>
-            <div class="action-text"><strong>Admin</strong> created a category and a staff account</div>
+            <div class="action-text"><strong>Admin</strong> — GSO categories, custodian account, role-gated modules</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">✓</div>
-            <div class="action-text"><strong>Custodian</strong> added the Baton item — QR code generated automatically</div>
+            <div class="action-text"><strong>Custodian</strong> — requesters (student/staff/faculty + department)</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">✓</div>
-            <div class="action-text"><strong>Custodian</strong> registered a student borrower</div>
+            <div class="action-text"><strong>Custodian</strong> — borrowable item + QR; consumable + release log tab</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">✓</div>
-            <div class="action-text"><strong>Custodian</strong> recorded IN (30 units) — stock ledger started</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">✓</div>
-            <div class="action-text"><strong>Custodian</strong> scanned QR → recorded OUT (1 unit) linked to Ana Maria Santos</div>
-          </div>
-          <div class="action-item">
-            <div class="action-num" style="background:var(--custodian);">✓</div>
-            <div class="action-text"><strong>Custodian</strong> scanned QR → recorded RETURN (1 unit) — stock restored</div>
+            <div class="action-text"><strong>Custodian</strong> — projector Receive → Issue → Return; bond paper Receive → Release</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--auditor);">✓</div>
-            <div class="action-text"><strong>Auditor</strong> filtered reports by type and item — exported CSV for official records</div>
+            <div class="action-text"><strong>Auditor</strong> — read-only UI on master data; filtered reports + CSV</div>
+          </div>
+          <div class="action-item">
+            <div class="action-num" style="background:var(--admin);">✓</div>
+            <div class="action-text"><strong>Policy</strong> — item delete only when stock 0 and no transactions (Admin)</div>
           </div>
         </div>
         <div class="rbac-callout">
           <div class="rbac-callout-label">The governance promise</div>
-          Every action carries: <strong>who did it · what role · what entity · what changed · when.</strong> The College can trace any issuance, return, or modification back to the specific staff member. No paper ledger, no verbal report, no guesswork — the system is the record.
+          Every action carries: <strong>who · role · entity · change · when.</strong> GSO can trace borrowable custody and consumable releases to a named requester — the system is the authoritative record.
         </div>
       </div>
     </div>
@@ -1021,7 +1104,7 @@ body{
         <span style="background:linear-gradient(135deg,#7c3aed,#0891b2,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Zero Paper. Zero Guesswork.</span>
       </h2>
       <p style="font-size:15px;color:var(--t70);max-width:600px;margin-bottom:32px;line-height:1.6;">
-        Every step — from item setup and QR code generation to borrower-linked issuance and audit export — was enforced by the system. Each role did exactly what it is permitted to do. Nothing more.
+        From GSO setup through borrowable issue/return, consumable release log, requester accountability, Auditor read-only oversight, and CSV export — each role did only what RBAC allows.
       </p>
     </div>
     <div class="summary-grid reveal">
@@ -1036,19 +1119,19 @@ body{
         <div class="summary-desc">Items get a unique QR code on creation. Camera scanning pre-fills the transaction form — no typing needed.</div>
       </div>
       <div class="summary-card">
-        <div class="summary-icon">🎓</div>
-        <div class="summary-title">Borrower Tracking</div>
-        <div class="summary-desc">Every OUT and RETURN is linked to a registered student. Equipment accountability is per-person, not per-item.</div>
+        <div class="summary-icon">👥</div>
+        <div class="summary-title">Requester Registry</div>
+        <div class="summary-desc">Students, staff, and faculty with ID and department — required on Issue, Return, and Release.</div>
       </div>
       <div class="summary-card">
-        <div class="summary-icon">📊</div>
-        <div class="summary-title">Ledger-Based Stock</div>
-        <div class="summary-desc">Stock is computed from IN/OUT/RETURN history — never a raw editable field. The ledger is the truth.</div>
+        <div class="summary-icon">📦</div>
+        <div class="summary-title">Two Inventory Types</div>
+        <div class="summary-desc">Borrowable: Receive · Issue · Return. Consumable: Receive · Release plus a dedicated release log.</div>
       </div>
       <div class="summary-card">
         <div class="summary-icon">📤</div>
         <div class="summary-title">Filtered CSV Export</div>
-        <div class="summary-desc">Auditors filter by date, item, type, or borrower and export exactly what they need for official reports.</div>
+        <div class="summary-desc">Filter by date, item, transaction type, requester, or inventory type — export for GSO reporting.</div>
       </div>
       <div class="summary-card">
         <div class="summary-icon">🛡️</div>
@@ -1057,7 +1140,7 @@ body{
       </div>
     </div>
     <p style="font-size:12px;color:var(--t45);margin-top:28px;text-align:center;">
-      QR-Code Integrated Inventory Management System · College of Criminology<br>
+      QR-Code Integrated Inventory Management System · General Supplies Office<br>
       Next.js 16 · TypeScript · PostgreSQL · Prisma · Auth.js v5 · Tailwind CSS v4 · shadcn/ui
     </p>
   </div>
