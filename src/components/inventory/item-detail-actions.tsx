@@ -20,6 +20,7 @@ import type { CreateItemInput } from "@/lib/validations";
 import type { InventoryTypeName } from "@/lib/constants";
 import { INVENTORY_TYPES } from "@/lib/constants";
 import { useSession } from "next-auth/react";
+import { canManageInventory } from "@/lib/roles";
 
 interface ItemDetailActionsProps {
   item: {
@@ -50,6 +51,7 @@ export function ItemDetailActions({
 }: ItemDetailActionsProps) {
   const router = useRouter();
   const { data: session } = useSession();
+  const canManage = canManageInventory(session?.user?.role);
   const isAdmin = session?.user?.role === "Admin";
   const canDelete = isAdmin && currentStock === 0 && transactionCount === 0;
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -87,6 +89,10 @@ export function ItemDetailActions({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete");
     }
+  }
+
+  if (!canManage) {
+    return null;
   }
 
   return (

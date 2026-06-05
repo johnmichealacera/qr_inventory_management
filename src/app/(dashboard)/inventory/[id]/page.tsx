@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { canManageInventory } from "@/lib/roles";
 import { getItemById, getItemStock } from "@/server/items";
 import { PageHeader } from "@/components/layout/page-header";
 import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
@@ -25,7 +26,7 @@ interface PageProps {
 export default async function ItemDetailPage({ params }: PageProps) {
   const { id } = await params;
   const session = await auth();
-  const isAdmin = session?.user?.role === "Admin";
+  const canManage = canManageInventory(session?.user?.role);
   const item = await getItemById(id);
   if (!item) notFound();
 
@@ -35,16 +36,18 @@ export default async function ItemDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader title={item.name} description={item.description ?? undefined}>
-        <ItemDetailActions
-          item={item}
-          listPath="/inventory"
-          inventoryType={item.inventoryType}
-          currentStock={currentStock}
-          transactionCount={item._count.transactions}
-        />
+        {canManage && (
+          <ItemDetailActions
+            item={item}
+            listPath="/inventory"
+            inventoryType={item.inventoryType}
+            currentStock={currentStock}
+            transactionCount={item._count.transactions}
+          />
+        )}
       </PageHeader>
 
-      {isAdmin && <ItemDeletePolicyNotice />}
+      {canManage && session?.user?.role === "Admin" && <ItemDeletePolicyNotice />}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">

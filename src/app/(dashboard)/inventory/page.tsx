@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { canManageInventory } from "@/lib/roles";
 import { getItems, getItemStock } from "@/server/items";
 import { INVENTORY_TYPES } from "@/lib/constants";
 import { PageHeader } from "@/components/layout/page-header";
@@ -9,8 +10,7 @@ import { Plus } from "lucide-react";
 
 export default async function InventoryPage() {
   const session = await auth();
-  const canManageInventory =
-    session?.user?.role === "Admin" || session?.user?.role === "Custodian";
+  const canManageInventoryRole = canManageInventory(session?.user?.role);
 
   const items = await getItems(undefined, undefined, INVENTORY_TYPES.BORROWABLE);
 
@@ -27,7 +27,7 @@ export default async function InventoryPage() {
         title="Borrowable inventory"
         description="Equipment and items that are issued and returned (QR-tracked)"
       >
-        {canManageInventory && (
+        {canManageInventoryRole && (
           <Link href="/inventory/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -37,7 +37,7 @@ export default async function InventoryPage() {
         )}
       </PageHeader>
 
-      <ItemTable items={itemsWithStock} />
+      <ItemTable items={itemsWithStock} canManage={canManageInventoryRole} />
     </div>
   );
 }

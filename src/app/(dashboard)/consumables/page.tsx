@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { canManageInventory } from "@/lib/roles";
 import { getItems, getItemStock } from "@/server/items";
 import { INVENTORY_TYPES } from "@/lib/constants";
 import { PageHeader } from "@/components/layout/page-header";
@@ -9,8 +10,7 @@ import { Plus } from "lucide-react";
 
 export default async function ConsumablesPage() {
   const session = await auth();
-  const canManage =
-    session?.user?.role === "Admin" || session?.user?.role === "Custodian";
+  const canManage = canManageInventory(session?.user?.role);
 
   const items = await getItems(undefined, undefined, INVENTORY_TYPES.CONSUMABLE);
 
@@ -37,7 +37,7 @@ export default async function ConsumablesPage() {
         )}
       </PageHeader>
 
-      <ConsumablesClient items={itemsWithStock} />
+      <ConsumablesClient items={itemsWithStock} canManage={canManage} />
     </div>
   );
 }

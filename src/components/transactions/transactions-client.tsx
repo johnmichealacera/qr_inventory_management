@@ -37,6 +37,7 @@ import type { InventoryTypeName } from "@/lib/constants";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { canManageInventory } from "@/lib/roles";
 import type { TransactionInput } from "@/lib/validations";
 
 interface Item {
@@ -71,7 +72,7 @@ const typeBadgeVariant: Record<string, "default" | "secondary" | "destructive" |
 export function TransactionsClient() {
   const router = useRouter();
   const { data: session } = useSession();
-  const canRecord = session?.user?.role === "Admin" || session?.user?.role === "Custodian";
+  const canRecord = canManageInventory(session?.user?.role);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [borrowers, setBorrowers] = useState<

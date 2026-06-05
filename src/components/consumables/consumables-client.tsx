@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ItemTable } from "@/components/inventory/item-table";
 import { ConsumableReleaseLog } from "@/components/consumables/consumable-release-log";
 import { Plus, Package, ClipboardList } from "lucide-react";
+
 interface Item {
   id: string;
   name: string;
@@ -18,7 +19,13 @@ interface Item {
   currentStock?: number;
 }
 
-export function ConsumablesClient({ items }: { items: Item[] }) {
+export function ConsumablesClient({
+  items,
+  canManage = false,
+}: {
+  items: Item[];
+  canManage?: boolean;
+}) {
   return (
     <Tabs defaultValue="items" className="space-y-4">
       <TabsList>
@@ -33,19 +40,22 @@ export function ConsumablesClient({ items }: { items: Item[] }) {
       </TabsList>
 
       <TabsContent value="items" className="space-y-4">
-        <div className="flex justify-end">
-          <Link href="/consumables/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add consumable
-            </Button>
-          </Link>
-        </div>
+        {canManage && (
+          <div className="flex justify-end">
+            <Link href="/consumables/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add consumable
+              </Button>
+            </Link>
+          </div>
+        )}
         <ItemTable
           items={items}
           detailBasePath="/consumables"
           emptyAddHref="/consumables/new"
           emptyMessage="No consumable items yet"
+          canManage={canManage}
         />
       </TabsContent>
 

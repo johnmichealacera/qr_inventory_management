@@ -46,6 +46,7 @@ interface ItemTableProps {
   detailBasePath?: string;
   emptyAddHref?: string;
   emptyMessage?: string;
+  canManage?: boolean;
 }
 
 export function ItemTable({
@@ -53,6 +54,7 @@ export function ItemTable({
   detailBasePath = "/inventory",
   emptyAddHref = "/inventory/new",
   emptyMessage = "No items found",
+  canManage = false,
 }: ItemTableProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -83,11 +85,13 @@ export function ItemTable({
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <p className="text-muted-foreground">{emptyMessage}</p>
-        <Link href={emptyAddHref}>
-          <Button variant="outline" className="mt-4">
-            Add your first item
-          </Button>
-        </Link>
+        {canManage && (
+          <Link href={emptyAddHref}>
+            <Button variant="outline" className="mt-4">
+              Add your first item
+            </Button>
+          </Link>
+        )}
       </div>
     );
   }
