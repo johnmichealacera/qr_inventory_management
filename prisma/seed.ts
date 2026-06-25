@@ -40,7 +40,20 @@ async function main() {
     create: { name: "Staff" },
   });
 
-  console.log("Roles ready:", { adminRole, custodianRole, auditorRole, facultyRole, staffRole });
+  const gsoOfficerRole = await prisma.role.upsert({
+    where: { name: "GSO Officer" },
+    update: {},
+    create: { name: "GSO Officer" },
+  });
+
+  console.log("Roles ready:", {
+    adminRole,
+    custodianRole,
+    auditorRole,
+    facultyRole,
+    staffRole,
+    gsoOfficerRole,
+  });
 
   const hashedPassword = await bcrypt.hash("password123", 12);
 
@@ -256,13 +269,25 @@ async function main() {
     });
   }
 
+  await prisma.user.upsert({
+    where: { username: "gso" },
+    update: { roleId: gsoOfficerRole.id },
+    create: {
+      name: "GSO Officer",
+      username: "gso",
+      password: hashedPassword,
+      roleId: gsoOfficerRole.id,
+    },
+  });
+
   console.log("Seed completed successfully!");
   console.log("\nDefault login credentials:");
-  console.log("  Admin:     admin / password123");
-  console.log("  Custodian: custodian / password123");
-  console.log("  Auditor:   auditor / password123");
-  console.log("  Faculty:   faculty / password123");
-  console.log("  Staff:     staff / password123");
+  console.log("  Admin:       admin / password123");
+  console.log("  Custodian:   custodian / password123");
+  console.log("  GSO Officer: gso / password123");
+  console.log("  Auditor:     auditor / password123");
+  console.log("  Faculty:     faculty / password123");
+  console.log("  Staff:       staff / password123");
 }
 
 main()

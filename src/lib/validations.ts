@@ -28,7 +28,13 @@ export const createConsumableRequestSchema = z
   });
 
 export const reviewConsumableRequestSchema = z.object({
-  status: z.enum(["APPROVED", "REJECTED", "FULFILLED"]),
+  status: z.enum([
+    "CANVASSING",
+    "FOR_VOUCHER",
+    "APPROVED",
+    "REJECTED",
+    "FULFILLED",
+  ]),
   reviewNotes: z.string().optional(),
 });
 

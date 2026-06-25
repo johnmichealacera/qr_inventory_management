@@ -2,10 +2,11 @@
 
 import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
-import { requireRole } from "@/lib/auth";
+import { requireAuth, requireRole } from "@/lib/auth";
 import { createItemSchema, updateItemSchema } from "@/lib/validations";
-import { EQUIPMENT_PROGRAM_CRIMINOLOGY, INVENTORY_TYPES } from "@/lib/constants";
+import { EQUIPMENT_PROGRAM_CRIMINOLOGY, INVENTORY_TYPES, ROLES } from "@/lib/constants";
 import type { InventoryTypeName } from "@/lib/constants";
+import { canManageConsumables, canManageInventory } from "@/lib/roles";
 import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 
@@ -99,8 +100,21 @@ export async function getItemStock(itemId: string): Promise<number> {
 }
 
 export async function createItem(data: unknown) {
-  const session = await requireRole(["Admin", "Custodian"]);
+  const session = await requireAuth();
+  const role = session.user.role;
+  if (!canManageConsumables(role)) {
+    throw new Error("Forbidden");
+  }
+
   const parsed = createItemSchema.parse(data);
+
+  if (role === ROLES.GSO_OFFICER && parsed.inventoryType !== INVENTORY_TYPES.CONSUMABLE) {
+    throw new Error("GSO Officers may only add consumable items");
+  }
+
+  if (!canManageInventory(role) && parsed.inventoryType !== INVENTORY_TYPES.CONSUMABLE) {
+    throw new Error("Forbidden");
+  }
 
   const item = await db.item.create({
     data: {
@@ -134,11 +148,25 @@ export async function createItem(data: unknown) {
 }
 
 export async function updateItem(id: string, data: unknown) {
-  const session = await requireRole(["Admin", "Custodian"]);
-  const parsed = updateItemSchema.parse(data);
+  const session = await requireAuth();
+  const role = session.user.role;
 
   const existing = await db.item.findUnique({ where: { id } });
   if (!existing) throw new Error("Item not found");
+
+  if (role === ROLES.GSO_OFFICER) {
+    if (existing.inventoryType !== INVENTORY_TYPES.CONSUMABLE) {
+      throw new Error("Forbidden");
+    }
+  } else if (!canManageInventory(role)) {
+    throw new Error("Forbidden");
+  }
+
+  const parsed = updateItemSchema.parse(data);
+
+  if (role === ROLES.GSO_OFFICER && parsed.inventoryType === INVENTORY_TYPES.BORROWABLE) {
+    throw new Error("GSO Officers may only edit consumable items");
+  }
 
   const item = await db.item.update({
     where: { id },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { canManageInventory, canSubmitConsumableRequest, canViewConsumables } from "@/lib/roles";
+import { canManageConsumables, canSubmitConsumableRequest, canViewConsumables, canViewReleaseLog } from "@/lib/roles";
 import { redirect } from "next/navigation";
 import { getItems, getItemStock } from "@/server/items";
 import { INVENTORY_TYPES } from "@/lib/constants";
@@ -17,7 +17,8 @@ export default async function ConsumablesPage() {
     redirect("/dashboard");
   }
 
-  const canManage = canManageInventory(role);
+  const canAddConsumables = canManageConsumables(role);
+  const canViewReleases = canViewReleaseLog(role);
   const canRequest = canSubmitConsumableRequest(role);
 
   const items = await getItems(undefined, undefined, INVENTORY_TYPES.CONSUMABLE);
@@ -34,12 +35,12 @@ export default async function ConsumablesPage() {
       <PageHeader
         title="Consumables"
         description={
-          canRequest && !canManage
+          canRequest && !canAddConsumables
             ? "View available supplies and submit requests for yourself. Off-catalog items can be requested from My requests."
             : "Supplies that are released when used (not returned). Track who received each release in the Release log tab."
         }
       >
-        {canManage && (
+        {canAddConsumables && (
           <Link href="/consumables/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -49,7 +50,13 @@ export default async function ConsumablesPage() {
         )}
       </PageHeader>
 
-      <ConsumablesClient items={itemsWithStock} canManage={canManage} canRequest={canRequest} />
+      <ConsumablesClient
+        items={itemsWithStock}
+        canAddConsumables={canAddConsumables}
+        canViewReleaseLog={canViewReleases}
+        canManageItems={canAddConsumables}
+        canRequest={canRequest}
+      />
     </div>
   );
 }

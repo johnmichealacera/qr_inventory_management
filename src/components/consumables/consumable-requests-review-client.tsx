@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { reviewConsumableRequest } from "@/server/consumable-requests";
@@ -18,13 +19,17 @@ import {
 } from "@/components/ui/table";
 import {
   CONSUMABLE_REQUEST_STATUS_LABELS,
+  CONSUMABLE_REQUEST_TRANSITIONS,
+  type ConsumableRequestStatusName,
   formatRequesterLine,
 } from "@/lib/constants";
 import { toast } from "sonner";
-import { Check, Loader2, PackageCheck, X } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
+import type { ReviewConsumableRequestInput } from "@/lib/validations";
 
 type ReviewRequest = {
   id: string;
+  requestNumber: string;
   quantity: number;
   notes: string | null;
   customItemName: string | null;
@@ -42,6 +47,14 @@ type ReviewRequest = {
   };
 };
 
+const ACTION_LABELS: Record<ReviewConsumableRequestInput["status"], string> = {
+  CANVASSING: "For canvassing",
+  FOR_VOUCHER: "For voucher",
+  APPROVED: "Approve",
+  REJECTED: "Reject",
+  FULFILLED: "Mark fulfilled",
+};
+
 function requestLabel(row: ReviewRequest) {
   if (row.item) return row.item.name;
   return row.customItemName ?? "Custom item";
@@ -51,6 +64,9 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
   switch (status) {
     case "PENDING":
       return "secondary";
+    case "CANVASSING":
+    case "FOR_VOUCHER":
+      return "outline";
     case "APPROVED":
       return "default";
     case "FULFILLED":
@@ -67,23 +83,14 @@ export function ConsumableRequestsReviewClient({ requests }: { requests: ReviewR
   const [notesById, setNotesById] = useState<Record<string, string>>({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  async function handleReview(
-    id: string,
-    status: "APPROVED" | "REJECTED" | "FULFILLED"
-  ) {
+  async function handleReview(id: string, status: ReviewConsumableRequestInput["status"]) {
     setLoadingId(id);
     try {
       await reviewConsumableRequest(id, {
         status,
         reviewNotes: notesById[id] || undefined,
       });
-      toast.success(
-        status === "APPROVED"
-          ? "Request approved"
-          : status === "REJECTED"
-            ? "Request rejected"
-            : "Request marked fulfilled"
-      );
+      toast.success(`Request updated: ${CONSUMABLE_REQUEST_STATUS_LABELS[status]}`);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Action failed");
@@ -92,60 +99,58 @@ export function ConsumableRequestsReviewClient({ requests }: { requests: ReviewR
     }
   }
 
-  const pending = requests.filter((r) => r.status === "PENDING");
-  const inProgress = requests.filter((r) => r.status === "APPROVED");
-  const closed = requests.filter((r) => r.status === "REJECTED" || r.status === "FULFILLED");
+  const counts = {
+    pending: requests.filter((r) => r.status === "PENDING").length,
+    canvassing: requests.filter((r) => r.status === "CANVASSING").length,
+    voucher: requests.filter((r) => r.status === "FOR_VOUCHER").length,
+    approved: requests.filter((r) => r.status === "APPROVED").length,
+    closed: requests.filter((r) => r.status === "REJECTED" || r.status === "FULFILLED").length,
+  };
+
+  const active = requests.filter(
+    (r) => r.status !== "REJECTED" && r.status !== "FULFILLED"
+  );
+  const closed = requests.filter(
+    (r) => r.status === "REJECTED" || r.status === "FULFILLED"
+  );
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-border/70 bg-card/85 shadow-lg ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{pending.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/70 bg-card/85 shadow-lg ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Approved (awaiting release)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{inProgress.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/70 bg-card/85 shadow-lg ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Closed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{closed.length}</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {(
+          [
+            ["Pending", counts.pending],
+            ["Canvassing", counts.canvassing],
+            ["For voucher", counts.voucher],
+            ["Approved", counts.approved],
+            ["Closed", counts.closed],
+          ] as const
+        ).map(([label, count]) => (
+          <Card
+            key={label}
+            className="border-border/70 bg-card/85 shadow-lg ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10"
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{count}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <RequestTable
-        title="Pending review"
-        requests={pending}
+        title="Active requests"
+        requests={active}
         notesById={notesById}
         setNotesById={setNotesById}
         loadingId={loadingId}
         onReview={handleReview}
-        showReviewActions
+        showActions
       />
 
-      <RequestTable
-        title="Approved — mark fulfilled after release"
-        requests={inProgress}
-        notesById={notesById}
-        setNotesById={setNotesById}
-        loadingId={loadingId}
-        onReview={handleReview}
-        showFulfillAction
-      />
-
-      <RequestTable title="Closed requests" requests={closed} />
+      <RequestTable title="Closed requests" requests={closed} showPrintOnly />
     </div>
   );
 }
@@ -157,17 +162,17 @@ function RequestTable({
   setNotesById,
   loadingId,
   onReview,
-  showReviewActions,
-  showFulfillAction,
+  showActions,
+  showPrintOnly,
 }: {
   title: string;
   requests: ReviewRequest[];
   notesById?: Record<string, string>;
   setNotesById?: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   loadingId?: string | null;
-  onReview?: (id: string, status: "APPROVED" | "REJECTED" | "FULFILLED") => void;
-  showReviewActions?: boolean;
-  showFulfillAction?: boolean;
+  onReview?: (id: string, status: ReviewConsumableRequestInput["status"]) => void;
+  showActions?: boolean;
+  showPrintOnly?: boolean;
 }) {
   if (requests.length === 0) return null;
 
@@ -180,124 +185,105 @@ function RequestTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>PR #</TableHead>
               <TableHead>Requester</TableHead>
               <TableHead>Item</TableHead>
               <TableHead className="text-center">Qty</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
-              {(showReviewActions || showFulfillAction) && <TableHead className="min-w-[220px]">Actions</TableHead>}
+              <TableHead className="min-w-[200px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {requests.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell>
-                  <div className="text-sm">
-                    <p className="font-medium">{row.user.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatRequesterLine(row.borrower)}
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{requestLabel(row)}</p>
-                    {row.customDescription && (
-                      <p className="text-xs text-muted-foreground">{row.customDescription}</p>
-                    )}
-                    {!row.item && (
-                      <Badge variant="outline" className="mt-1 text-[10px]">
-                        Off-catalog
-                      </Badge>
-                    )}
-                    {row.notes && (
-                      <p className="mt-1 text-xs text-muted-foreground">{row.notes}</p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">{row.quantity}</TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant(row.status)}>
-                    {CONSUMABLE_REQUEST_STATUS_LABELS[
-                      row.status as keyof typeof CONSUMABLE_REQUEST_STATUS_LABELS
-                    ] ?? row.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                  {format(new Date(row.createdAt), "MMM d, yyyy")}
-                </TableCell>
-                {showReviewActions && onReview && notesById && setNotesById && (
+            {requests.map((row) => {
+              const transitions =
+                CONSUMABLE_REQUEST_TRANSITIONS[row.status as ConsumableRequestStatusName] ?? [];
+
+              return (
+                <TableRow key={row.id}>
+                  <TableCell className="font-mono text-xs">{row.requestNumber}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-2">
-                      <Textarea
-                        rows={2}
-                        placeholder="Review notes (optional)"
-                        value={notesById[row.id] ?? ""}
-                        onChange={(e) =>
-                          setNotesById((prev) => ({ ...prev, [row.id]: e.target.value }))
-                        }
-                        className="text-sm"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => onReview(row.id, "APPROVED")}
-                          disabled={loadingId === row.id}
-                        >
-                          {loadingId === row.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Check className="mr-1 h-3 w-3" />
-                              Approve
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => onReview(row.id, "REJECTED")}
-                          disabled={loadingId === row.id}
-                        >
-                          <X className="mr-1 h-3 w-3" />
-                          Reject
-                        </Button>
-                      </div>
+                    <div className="text-sm">
+                      <p className="font-medium">{row.user.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatRequesterLine(row.borrower)}
+                      </p>
                     </div>
                   </TableCell>
-                )}
-                {showFulfillAction && onReview && notesById && setNotesById && (
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{requestLabel(row)}</p>
+                      {row.customDescription && (
+                        <p className="text-xs text-muted-foreground">{row.customDescription}</p>
+                      )}
+                      {!row.item && (
+                        <Badge variant="outline" className="mt-1 text-[10px]">
+                          Off-catalog
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">{row.quantity}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(row.status)}>
+                      {CONSUMABLE_REQUEST_STATUS_LABELS[
+                        row.status as ConsumableRequestStatusName
+                      ] ?? row.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {format(new Date(row.createdAt), "MMM d, yyyy")}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-2">
-                      <Textarea
-                        rows={2}
-                        placeholder="Fulfillment notes (optional)"
-                        value={notesById[row.id] ?? ""}
-                        onChange={(e) =>
-                          setNotesById((prev) => ({ ...prev, [row.id]: e.target.value }))
-                        }
-                        className="text-sm"
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onReview(row.id, "FULFILLED")}
-                        disabled={loadingId === row.id}
-                      >
-                        {loadingId === row.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
+                      <Link href={`/purchase-request/${row.id}`} target="_blank">
+                        <Button variant="outline" size="sm" className="w-full gap-1">
+                          <Printer className="h-3.5 w-3.5" />
+                          Print form
+                        </Button>
+                      </Link>
+                      {showActions &&
+                        !showPrintOnly &&
+                        onReview &&
+                        notesById &&
+                        setNotesById &&
+                        transitions.length > 0 && (
                           <>
-                            <PackageCheck className="mr-1 h-3 w-3" />
-                            Mark fulfilled
+                            <Textarea
+                              rows={2}
+                              placeholder="GSO remarks (optional)"
+                              value={notesById[row.id] ?? ""}
+                              onChange={(e) =>
+                                setNotesById((prev) => ({ ...prev, [row.id]: e.target.value }))
+                              }
+                              className="text-sm"
+                            />
+                            <div className="flex flex-wrap gap-1">
+                              {transitions.map((next) => (
+                                <Button
+                                  key={next}
+                                  size="sm"
+                                  variant={next === "REJECTED" ? "destructive" : "default"}
+                                  onClick={() =>
+                                    onReview(row.id, next as ReviewConsumableRequestInput["status"])
+                                  }
+                                  disabled={loadingId === row.id}
+                                >
+                                  {loadingId === row.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    ACTION_LABELS[next as ReviewConsumableRequestInput["status"]]
+                                  )}
+                                </Button>
+                              ))}
+                            </div>
                           </>
                         )}
-                      </Button>
                     </div>
                   </TableCell>
-                )}
-              </TableRow>
-            ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>

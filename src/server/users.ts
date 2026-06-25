@@ -14,7 +14,21 @@ export async function getUsers() {
   });
 }
 
+import { ROLES } from "@/lib/constants";
+
+const ALL_ROLE_NAMES = Object.values(ROLES);
+
 export async function getRoles() {
+  await Promise.all(
+    ALL_ROLE_NAMES.map((name) =>
+      db.role.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      })
+    )
+  );
+
   return db.role.findMany({ orderBy: { name: "asc" } });
 }
 

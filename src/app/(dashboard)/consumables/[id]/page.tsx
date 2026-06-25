@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { canManageInventory, canSubmitConsumableRequest, canViewConsumables } from "@/lib/roles";
+import { canManageConsumables, canSubmitConsumableRequest, canViewConsumables, canViewReleaseLog } from "@/lib/roles";
 import { getItemById, getItemStock } from "@/server/items";
 // Panel feedback: delete policy notice hidden — revisit later if activation is needed
 // import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
@@ -39,7 +39,8 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
     redirect("/dashboard");
   }
 
-  const canManage = canManageInventory(role);
+  const canEditConsumable = canManageConsumables(role);
+  const canViewReleases = canViewReleaseLog(role);
   const canRequest = canSubmitConsumableRequest(role);
   const item = await getItemById(id);
   if (!item || item.inventoryType !== INVENTORY_TYPES.CONSUMABLE) notFound();
@@ -58,7 +59,7 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
               trigger={<Button>Request this item</Button>}
             />
           )}
-          {canManage && (
+          {canEditConsumable && (
             <ItemDetailActions
               item={item}
               listPath="/consumables"
@@ -112,11 +113,11 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                {canRequest && !canManage ? "Stock status" : "Release history"}
+                {canRequest && !canViewReleases ? "Stock status" : "Release history"}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {canRequest && !canManage ? (
+              {canRequest && !canViewReleases ? (
                 <dl className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <dt className="text-muted-foreground">Available</dt>

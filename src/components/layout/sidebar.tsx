@@ -45,6 +45,7 @@ const navigation: NavItem[] = [
     roles: [
       ROLES.ADMIN,
       ROLES.CUSTODIAN,
+      ROLES.GSO_OFFICER,
       ROLES.AUDITOR,
       ROLES.FACULTY,
       ROLES.STAFF,
@@ -60,7 +61,7 @@ const navigation: NavItem[] = [
     name: "Request queue",
     href: "/consumable-requests",
     icon: ClipboardList,
-    roles: [ROLES.ADMIN, ROLES.CUSTODIAN],
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN, ROLES.GSO_OFFICER],
   },
   {
     name: "Borrowable inventory",

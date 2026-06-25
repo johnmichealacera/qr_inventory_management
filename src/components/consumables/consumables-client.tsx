@@ -21,11 +21,15 @@ interface Item {
 
 export function ConsumablesClient({
   items,
-  canManage = false,
+  canAddConsumables = false,
+  canViewReleaseLog = false,
+  canManageItems = false,
   canRequest = false,
 }: {
   items: Item[];
-  canManage?: boolean;
+  canAddConsumables?: boolean;
+  canViewReleaseLog?: boolean;
+  canManageItems?: boolean;
   canRequest?: boolean;
 }) {
   return (
@@ -34,9 +38,9 @@ export function ConsumablesClient({
         <div className="inline-flex h-9 items-center rounded-lg bg-muted p-1 text-muted-foreground">
           <TabsTrigger value="items" className="gap-2">
             <Package className="h-4 w-4" />
-            {canRequest && !canManage ? "Catalog" : "Consumable items"}
+            {canRequest && !canAddConsumables ? "Catalog" : "Consumable items"}
           </TabsTrigger>
-          {canManage && (
+          {canViewReleaseLog && (
             <TabsTrigger value="releases" className="gap-2">
               <ClipboardList className="h-4 w-4" />
               Release log
@@ -54,7 +58,7 @@ export function ConsumablesClient({
       </TabsList>
 
       <TabsContent value="items" className="space-y-4">
-        {canManage && (
+        {canAddConsumables && (
           <div className="flex justify-end">
             <Link href="/consumables/new">
               <Button>
@@ -64,7 +68,7 @@ export function ConsumablesClient({
             </Link>
           </div>
         )}
-        {canRequest && !canManage && (
+        {canRequest && !canAddConsumables && (
           <p className="text-sm text-muted-foreground">
             Browse available supplies and click <strong>Request</strong> on any item, or submit an{" "}
             <Link
@@ -81,12 +85,12 @@ export function ConsumablesClient({
           detailBasePath="/consumables"
           emptyAddHref="/consumables/new"
           emptyMessage="No consumable items yet"
-          canManage={canManage}
+          canManage={canManageItems}
           canRequest={canRequest}
         />
       </TabsContent>
 
-      {canManage && (
+      {canViewReleaseLog && (
         <TabsContent value="releases">
           <ConsumableReleaseLog />
         </TabsContent>

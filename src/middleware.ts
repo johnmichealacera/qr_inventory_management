@@ -5,16 +5,25 @@ import { ROLES } from "@/lib/constants";
 
 const { auth } = NextAuth(authConfig);
 
-const REQUESTER_PATHS = ["/dashboard", "/consumables", "/my-requests"];
+const REQUESTER_PATHS = ["/dashboard", "/consumables", "/my-requests", "/purchase-request"];
+
+const GSO_OFFICER_PATHS = [
+  "/dashboard",
+  "/consumables",
+  "/consumable-requests",
+  "/purchase-request",
+];
 
 function isRequesterRole(role?: string | null) {
   return role === ROLES.FACULTY || role === ROLES.STAFF;
 }
 
-function pathAllowedForRequester(pathname: string) {
-  return REQUESTER_PATHS.some(
-    (base) => pathname === base || pathname.startsWith(`${base}/`)
-  );
+function isGsoOfficerRole(role?: string | null) {
+  return role === ROLES.GSO_OFFICER;
+}
+
+function pathAllowed(paths: string[], pathname: string) {
+  return paths.some((base) => pathname === base || pathname.startsWith(`${base}/`));
 }
 
 export default auth((req) => {
@@ -36,7 +45,11 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  if (isAuthenticated && isRequesterRole(role) && !pathAllowedForRequester(pathname)) {
+  if (isAuthenticated && isRequesterRole(role) && !pathAllowed(REQUESTER_PATHS, pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+  }
+
+  if (isAuthenticated && isGsoOfficerRole(role) && !pathAllowed(GSO_OFFICER_PATHS, pathname)) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 

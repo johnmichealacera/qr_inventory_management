@@ -3,7 +3,11 @@
 import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
 import { requireAuth, requireRole } from "@/lib/auth";
-import { INVENTORY_TYPES } from "@/lib/constants";
+import {
+  CONSUMABLE_REQUEST_TRANSITIONS,
+  INVENTORY_TYPES,
+  type ConsumableRequestStatusName,
+} from "@/lib/constants";
 import {
   canReviewConsumableRequests,
   canSubmitConsumableRequest,
@@ -21,6 +25,15 @@ const requestInclude = {
   item: { select: { id: true, name: true, inventoryType: true } },
   reviewedBy: { select: { id: true, name: true } },
 } as const;
+
+async function generateRequestNumber(): Promise<string> {
+  const year = new Date().getFullYear();
+  const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+  const count = await db.consumableRequest.count({
+    where: { createdAt: { gte: startOfYear } },
+  });
+  return `PR-${year}-${String(count + 1).padStart(4, "0")}`;
+}
 
 async function getRequesterBorrowerId(userId: string) {
   const user = await db.user.findUnique({
@@ -51,6 +64,23 @@ export async function getMyConsumableRequests() {
   });
 }
 
+export async function getConsumableRequestById(id: string) {
+  const session = await requireAuth();
+  const request = await db.consumableRequest.findUnique({
+    where: { id },
+    include: requestInclude,
+  });
+  if (!request) return null;
+
+  const canReview = canReviewConsumableRequests(session.user.role);
+  const isOwner = request.userId === session.user.id;
+  if (!canReview && !isOwner) {
+    throw new Error("Forbidden");
+  }
+
+  return request;
+}
+
 export async function getConsumableRequestsForReview(status?: string) {
   const session = await requireAuth();
   if (!canReviewConsumableRequests(session.user.role)) {
@@ -58,7 +88,11 @@ export async function getConsumableRequestsForReview(status?: string) {
   }
 
   return db.consumableRequest.findMany({
-    where: status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" | "FULFILLED" } : undefined,
+    where: status
+      ? {
+          status: status as ConsumableRequestStatusName,
+        }
+      : undefined,
     include: requestInclude,
     orderBy: { createdAt: "desc" },
   });
@@ -72,7 +106,10 @@ export async function getMyRequestStats() {
 
   const [pending, approved, fulfilled, rejected] = await Promise.all([
     db.consumableRequest.count({
-      where: { userId: session.user.id, status: "PENDING" },
+      where: {
+        userId: session.user.id,
+        status: { in: ["PENDING", "CANVASSING", "FOR_VOUCHER"] },
+      },
     }),
     db.consumableRequest.count({
       where: { userId: session.user.id, status: "APPROVED" },
@@ -98,7 +135,9 @@ export async function getPendingRequestCountForReview() {
   const session = await requireAuth();
   if (!canReviewConsumableRequests(session.user.role)) return 0;
 
-  return db.consumableRequest.count({ where: { status: "PENDING" } });
+  return db.consumableRequest.count({
+    where: { status: { in: ["PENDING", "CANVASSING", "FOR_VOUCHER"] } },
+  });
 }
 
 export async function createConsumableRequest(data: unknown) {
@@ -117,8 +156,11 @@ export async function createConsumableRequest(data: unknown) {
     }
   }
 
+  const requestNumber = await generateRequestNumber();
+
   const request = await db.consumableRequest.create({
     data: {
+      requestNumber,
       userId: session.user.id,
       borrowerId,
       itemId: parsed.itemId?.trim() || null,
@@ -137,7 +179,7 @@ export async function createConsumableRequest(data: unknown) {
     action: "CREATE_CONSUMABLE_REQUEST",
     entity: "ConsumableRequest",
     entityId: request.id,
-    details: `Requested ${parsed.quantity}× ${label}`,
+    details: `${requestNumber}: requested ${parsed.quantity}× ${label}`,
   });
 
   revalidatePath("/my-requests");
@@ -149,21 +191,22 @@ export async function createConsumableRequest(data: unknown) {
 }
 
 export async function reviewConsumableRequest(id: string, data: unknown) {
-  const session = await requireRole(["Admin", "Custodian"]);
+  const session = await requireAuth();
+  if (!canReviewConsumableRequests(session.user.role)) {
+    throw new Error("Forbidden");
+  }
+
   const parsed = reviewConsumableRequestSchema.parse(data);
 
   const existing = await db.consumableRequest.findUnique({ where: { id } });
   if (!existing) throw new Error("Request not found");
 
-  if (parsed.status === "FULFILLED" && existing.status !== "APPROVED") {
-    throw new Error("Only approved requests can be marked fulfilled");
-  }
-
-  if (
-    (parsed.status === "APPROVED" || parsed.status === "REJECTED") &&
-    existing.status !== "PENDING"
-  ) {
-    throw new Error("Only pending requests can be approved or rejected");
+  const currentStatus = existing.status as ConsumableRequestStatusName;
+  const allowed = CONSUMABLE_REQUEST_TRANSITIONS[currentStatus] ?? [];
+  if (!allowed.includes(parsed.status as ConsumableRequestStatusName)) {
+    throw new Error(
+      `Cannot move from ${currentStatus} to ${parsed.status}. Allowed: ${allowed.join(", ") || "none"}`
+    );
   }
 
   const request = await db.consumableRequest.update({
@@ -182,12 +225,13 @@ export async function reviewConsumableRequest(id: string, data: unknown) {
     action: `CONSUMABLE_REQUEST_${parsed.status}`,
     entity: "ConsumableRequest",
     entityId: request.id,
-    details: `${parsed.status} request from ${request.user.name}`,
+    details: `${request.requestNumber} → ${parsed.status}`,
   });
 
   revalidatePath("/consumable-requests");
   revalidatePath("/my-requests");
   revalidatePath("/dashboard");
+  revalidatePath(`/purchase-request/${id}`);
 
   return request;
 }

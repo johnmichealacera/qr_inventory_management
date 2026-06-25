@@ -93,6 +93,8 @@ model Item {
 
 enum ConsumableRequestStatus {
   PENDING
+  CANVASSING
+  FOR_VOUCHER
   APPROVED
   REJECTED
   FULFILLED
@@ -101,6 +103,7 @@ enum ConsumableRequestStatus {
 /// Faculty/staff consumable request — catalog item or off-catalog (custom name)
 model ConsumableRequest {
   id                String                  @id @default(cuid())
+  requestNumber     String                  @unique
   userId            String
   borrowerId        String
   itemId            String?

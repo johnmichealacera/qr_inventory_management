@@ -17,7 +17,7 @@ export default async function ConsumableRequestsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Consumable requests"
-        description="Review faculty and staff requests — approve, reject, or mark fulfilled after release."
+        description="Review faculty and staff requests — canvassing, voucher, approval, and printable purchase request forms."
       />
 
       <ConsumableRequestsReviewClient requests={requests} />

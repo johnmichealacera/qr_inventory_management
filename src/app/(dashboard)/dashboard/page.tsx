@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { canManageInventory, isRequesterRole } from "@/lib/roles";
+import { canManageInventory, isGsoOfficerRole, isRequesterRole } from "@/lib/roles";
 import { getDashboardStats } from "@/server/dashboard";
 import { getMyRequestStats, getPendingRequestCountForReview } from "@/server/consumable-requests";
 import { PageHeader } from "@/components/layout/page-header";
@@ -22,6 +22,19 @@ export default async function DashboardPage() {
           description="Request consumables from the General Supplies Office"
         />
         <RequesterDashboard stats={stats} />
+      </div>
+    );
+  }
+
+  if (isGsoOfficerRole(role)) {
+    const pendingRequests = await getPendingRequestCountForReview();
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Manage consumable catalog and purchase requests"
+        />
+        <CustodianRequestsAlert pendingCount={pendingRequests} />
       </div>
     );
   }

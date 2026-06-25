@@ -13,12 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CONSUMABLE_REQUEST_STATUS_LABELS } from "@/lib/constants";
+import {
+  CONSUMABLE_REQUEST_STATUS_LABELS,
+  type ConsumableRequestStatusName,
+} from "@/lib/constants";
 import { ConsumableRequestDialog } from "@/components/consumables/consumable-request-dialog";
-import { Plus } from "lucide-react";
+import { Plus, Printer } from "lucide-react";
 
 type RequestRow = {
   id: string;
+  requestNumber: string;
   quantity: number;
   notes: string | null;
   customItemName: string | null;
@@ -35,6 +39,9 @@ function statusVariant(status: string): "default" | "secondary" | "destructive" 
   switch (status) {
     case "PENDING":
       return "secondary";
+    case "CANVASSING":
+    case "FOR_VOUCHER":
+      return "outline";
     case "APPROVED":
       return "default";
     case "FULFILLED":
@@ -59,8 +66,8 @@ export function MyRequestsClient({ requests }: { requests: RequestRow[] }) {
           <div>
             <CardTitle className="text-base">Request something not in the catalog</CardTitle>
             <CardDescription>
-              Need a supply that is not listed under Consumables? Submit an off-catalog request for
-              GSO to review.
+              Need a supply that is not listed under Consumables? Submit an off-catalog purchase
+              request for GSO to process (canvassing / voucher).
             </CardDescription>
           </div>
           <ConsumableRequestDialog
@@ -78,7 +85,7 @@ export function MyRequestsClient({ requests }: { requests: RequestRow[] }) {
         <CardHeader>
           <CardTitle className="text-base">Your requests</CardTitle>
           <CardDescription>
-            Track pending, approved, and fulfilled consumable requests.
+            Track status from pending review through canvassing, voucher, approval, and fulfillment.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,16 +102,18 @@ export function MyRequestsClient({ requests }: { requests: RequestRow[] }) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>PR #</TableHead>
                   <TableHead>Item</TableHead>
                   <TableHead className="text-center">Qty</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Submitted</TableHead>
-                  <TableHead>Review</TableHead>
+                  <TableHead className="text-right">Form</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.map((row) => (
                   <TableRow key={row.id}>
+                    <TableCell className="font-mono text-xs">{row.requestNumber}</TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium">{requestLabel(row)}</p>
@@ -118,8 +127,8 @@ export function MyRequestsClient({ requests }: { requests: RequestRow[] }) {
                             Off-catalog
                           </Badge>
                         )}
-                        {row.notes && (
-                          <p className="mt-1 text-xs text-muted-foreground">{row.notes}</p>
+                        {row.reviewNotes && (
+                          <p className="mt-1 text-xs text-muted-foreground">{row.reviewNotes}</p>
                         )}
                       </div>
                     </TableCell>
@@ -127,21 +136,20 @@ export function MyRequestsClient({ requests }: { requests: RequestRow[] }) {
                     <TableCell>
                       <Badge variant={statusVariant(row.status)}>
                         {CONSUMABLE_REQUEST_STATUS_LABELS[
-                          row.status as keyof typeof CONSUMABLE_REQUEST_STATUS_LABELS
+                          row.status as ConsumableRequestStatusName
                         ] ?? row.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {format(new Date(row.createdAt), "MMM d, yyyy")}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {row.reviewNotes ? (
-                        <span title={row.reviewNotes}>{row.reviewNotes}</span>
-                      ) : row.reviewedBy ? (
-                        `By ${row.reviewedBy.name}`
-                      ) : (
-                        "—"
-                      )}
+                    <TableCell className="text-right">
+                      <Link href={`/purchase-request/${row.id}`} target="_blank">
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Printer className="h-3.5 w-3.5" />
+                          Print
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}

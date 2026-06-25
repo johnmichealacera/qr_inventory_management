@@ -2,6 +2,7 @@ export const ROLES = {
   ADMIN: "Admin",
   CUSTODIAN: "Custodian",
   AUDITOR: "Auditor",
+  GSO_OFFICER: "GSO Officer",
   FACULTY: "Faculty",
   STAFF: "Staff",
 } as const;
@@ -51,6 +52,8 @@ export const PERSON_TYPE_LABELS: Record<PersonTypeName, string> = {
 
 export const CONSUMABLE_REQUEST_STATUSES = {
   PENDING: "PENDING",
+  CANVASSING: "CANVASSING",
+  FOR_VOUCHER: "FOR_VOUCHER",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
   FULFILLED: "FULFILLED",
@@ -61,9 +64,24 @@ export type ConsumableRequestStatusName =
 
 export const CONSUMABLE_REQUEST_STATUS_LABELS: Record<ConsumableRequestStatusName, string> = {
   PENDING: "Pending review",
+  CANVASSING: "For canvassing",
+  FOR_VOUCHER: "For voucher",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   FULFILLED: "Fulfilled",
+};
+
+/** Allowed status transitions for consumable purchase requests */
+export const CONSUMABLE_REQUEST_TRANSITIONS: Record<
+  ConsumableRequestStatusName,
+  ConsumableRequestStatusName[]
+> = {
+  PENDING: ["CANVASSING", "FOR_VOUCHER", "APPROVED", "REJECTED"],
+  CANVASSING: ["FOR_VOUCHER", "REJECTED"],
+  FOR_VOUCHER: ["APPROVED", "REJECTED"],
+  APPROVED: ["FULFILLED"],
+  REJECTED: [],
+  FULFILLED: [],
 };
 
 /** Study scope: inventory limited to College of Criminology equipment */

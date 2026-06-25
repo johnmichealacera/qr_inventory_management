@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { canManageInventory } from "@/lib/roles";
+import { canManageConsumables } from "@/lib/roles";
 import { redirect } from "next/navigation";
 
 export default async function NewConsumableLayout({
@@ -8,7 +8,7 @@ export default async function NewConsumableLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  if (!canManageInventory(session?.user?.role)) {
+  if (!canManageConsumables(session?.user?.role)) {
     redirect("/consumables");
   }
   return children;
