@@ -11,7 +11,7 @@ import { revalidatePath } from "next/cache";
 const requesterSelect = {
   id: true,
   fullName: true,
-  studentId: true,
+  idNumber: true,
   personType: true,
   department: true,
 } as const;

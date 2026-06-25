@@ -13,7 +13,7 @@ export async function getBorrowers(search?: string) {
   if (search?.trim()) {
     where.OR = [
       { fullName: { contains: search, mode: "insensitive" } },
-      { studentId: { contains: search, mode: "insensitive" } },
+      { idNumber: { contains: search, mode: "insensitive" } },
       { department: { contains: search, mode: "insensitive" } },
     ];
   }
@@ -32,17 +32,17 @@ export async function createBorrower(data: unknown) {
   const parsed = createBorrowerSchema.parse(data);
 
   const existing = await db.borrower.findUnique({
-    where: { studentId: parsed.studentId.trim() },
+    where: { idNumber: parsed.idNumber.trim() },
   });
   if (existing) throw new Error("This ID number is already registered");
 
   const borrower = await db.borrower.create({
     data: {
       fullName: parsed.fullName.trim(),
-      studentId: parsed.studentId.trim(),
+      idNumber: parsed.idNumber.trim(),
       personType: parsed.personType,
       department: parsed.department.trim(),
-      programSection: parsed.programSection?.trim() || null,
+      officeUnit: parsed.officeUnit?.trim() || null,
       contactPhone: parsed.contactPhone?.trim() || null,
     },
   });
@@ -52,7 +52,7 @@ export async function createBorrower(data: unknown) {
     action: "CREATE_BORROWER",
     entity: "Borrower",
     entityId: borrower.id,
-    details: `Registered requester: ${borrower.fullName} (${borrower.studentId})`,
+    details: `Registered requester: ${borrower.fullName} (${borrower.idNumber})`,
   });
 
   revalidatePath("/borrowers");
@@ -66,20 +66,20 @@ export async function updateBorrower(id: string, data: unknown) {
   const session = await requireRole(["Admin", "Custodian"]);
   const parsed = updateBorrowerSchema.parse(data);
 
-  if (parsed.studentId) {
+  if (parsed.idNumber) {
     const dup = await db.borrower.findFirst({
-      where: { studentId: parsed.studentId.trim(), NOT: { id } },
+      where: { idNumber: parsed.idNumber.trim(), NOT: { id } },
     });
     if (dup) throw new Error("This ID number is already in use");
   }
 
   const updateData: Prisma.BorrowerUpdateInput = {};
   if (parsed.fullName !== undefined) updateData.fullName = parsed.fullName.trim();
-  if (parsed.studentId !== undefined) updateData.studentId = parsed.studentId.trim();
+  if (parsed.idNumber !== undefined) updateData.idNumber = parsed.idNumber.trim();
   if (parsed.personType !== undefined) updateData.personType = parsed.personType;
   if (parsed.department !== undefined) updateData.department = parsed.department.trim();
-  if (parsed.programSection !== undefined) {
-    updateData.programSection = parsed.programSection?.trim() || null;
+  if (parsed.officeUnit !== undefined) {
+    updateData.officeUnit = parsed.officeUnit?.trim() || null;
   }
   if (parsed.contactPhone !== undefined) {
     updateData.contactPhone = parsed.contactPhone?.trim() || null;

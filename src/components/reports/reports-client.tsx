@@ -48,7 +48,7 @@ interface Transaction {
   borrower: {
     id: string;
     fullName: string;
-    studentId: string;
+    idNumber: string;
     personType: string;
     department: string;
   } | null;
@@ -62,7 +62,7 @@ interface Item {
 interface BorrowerRow {
   id: string;
   fullName: string;
-  studentId: string;
+  idNumber: string;
   personType: string;
   department: string;
 }

@@ -1,6 +1,6 @@
 # QR-Code Integrated Inventory Management System
 
-A production-ready inventory management system scoped to the **College of Criminology** (equipment program: Criminology), built with Next.js, TypeScript, and PostgreSQL. QR codes support quick lookups; **borrowers (students)** are recorded on issuance and return; **Admin**, **Custodian**, and **Auditor** roles apply RBAC across the app and API.
+A production-ready inventory management system for the **General Supplies Office**, built with Next.js, TypeScript, and PostgreSQL. QR codes support quick lookups; **staff and faculty requesters** are recorded on issuance, return, and consumable release; **Admin**, **Custodian**, **Auditor**, **Faculty**, and **Staff** roles apply RBAC across the app and API.
 
 ## Tech Stack
 
@@ -20,7 +20,7 @@ A production-ready inventory management system scoped to the **College of Crimin
 - **Inventory Management**: Full CRUD for items with categories
 - **QR Code System**: Auto-generated QR codes per item, downloadable as PNG
 - **QR Scanner**: Camera-based scanning with fallback manual entry
-- **Borrowers**: Student/borrower registry (Admin + Custodian); required on **OUT** and **RETURN** transactions
+- **Requesters**: Staff and faculty registry (Admin + Custodian); required on **OUT**, **RETURN**, and consumable **release**
 - **Transactions**: Record IN/OUT/RETURN movements; stock computed from transaction history
 - **Reports**: Filterable reports (date range, item, type, borrower) and **CSV export**
 - **Audit Logs**: Track all user actions with timestamps

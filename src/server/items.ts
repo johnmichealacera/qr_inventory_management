@@ -58,7 +58,7 @@ export async function getItemById(id: string) {
             select: {
               id: true,
               fullName: true,
-              studentId: true,
+              idNumber: true,
               personType: true,
               department: true,
             },

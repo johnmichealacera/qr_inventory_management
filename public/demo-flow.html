@@ -541,7 +541,7 @@ body{
   <div class="slide-inner">
     <div class="reveal">
       <div class="scene-num">Scene 3 · Requesters</div>
-      <h2 class="scene-title">Custodian Registers a Requester (Student, Staff, or Faculty)</h2>
+      <h2 class="scene-title">Custodian Registers a Requester (Staff or Faculty)</h2>
     </div>
     <div class="scene-body reveal" style="--role-color:var(--custodian);--role-bg:var(--custodian-bg);--role-border:var(--custodian-border);">
       <div class="role-block">
@@ -555,14 +555,13 @@ body{
         <div class="role-badge" style="background:var(--custodian);">custodian</div>
         <div class="role-module">Module: <span>Requesters</span></div>
         <div style="font-size:12px;color:var(--t70);margin-top:6px;line-height:1.5;">
-          Issuance, return, and consumable <strong>release</strong> all require a registered requester. The registry supports students, staff, and faculty — each with a required <strong>department</strong>.
+          Issuance, return, and consumable <strong>release</strong> all require a registered requester. The registry is limited to <strong>staff and faculty</strong> — each with a required <strong>department</strong>.
         </div>
         <div style="background:#ffffff;border:1px solid var(--custodian-border);border-radius:8px;padding:10px 12px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--custodian);margin-bottom:6px;">Seeded requesters</div>
           <div style="font-size:12px;color:#334155;line-height:1.7;">
-            <strong>Ana Maria Santos</strong> — Student · CRIM-2024-001 · BSCrim 4A<br>
-            <strong>Juan Dela Cruz</strong> — Student · CRIM-2024-014 · BSCrim 3B<br>
-            <strong>Prof. Elena Reyes</strong> — Faculty · FAC-CRIM-012 (for consumable release demo)
+            <strong>Maria Lopez</strong> — Staff · STAFF-GSO-001 · Receiving desk<br>
+            <strong>Prof. Elena Reyes</strong> — Faculty · FAC-GSO-012
           </div>
         </div>
       </div>
@@ -571,11 +570,11 @@ body{
           <div class="action-list-head">Actions</div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">1</div>
-            <div class="action-text">Navigate to <strong>Requesters</strong> — see seeded students and faculty</div>
+            <div class="action-text">Navigate to <strong>Requesters</strong> — see seeded staff and faculty</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Click <strong>Register requester</strong> — person type (<em>Staff</em>), full name, ID number, <strong>department</strong> (required), program/section optional</div>
+            <div class="action-text">Click <strong>Register requester</strong> — person type (<em>Staff</em> or <em>Faculty</em>), full name, ID number, <strong>department</strong> (required), office/unit optional</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">3</div>
@@ -806,7 +805,7 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">5</div>
-            <div class="action-text">Select requester: <em>Ana Maria Santos</em> (shows ID, role, department), qty <strong>1</strong></div>
+            <div class="action-text">Select requester: <em>Maria Lopez</em> (Staff, GSO), qty <strong>1</strong></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">6</div>
@@ -858,7 +857,7 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">2</div>
-            <div class="action-text">Current stock: <strong>4</strong> — select <strong>Return</strong>, requester <em>Ana Maria Santos</em>, qty <strong>1</strong></div>
+            <div class="action-text">Current stock: <strong>4</strong> — select <strong>Return</strong>, requester <em>Maria Lopez</em>, qty <strong>1</strong></div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">3</div>
@@ -1066,7 +1065,7 @@ body{
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">✓</div>
-            <div class="action-text"><strong>Custodian</strong> — requesters (student/staff/faculty + department)</div>
+            <div class="action-text"><strong>Custodian</strong> — requesters (staff/faculty + department)</div>
           </div>
           <div class="action-item">
             <div class="action-num" style="background:var(--custodian);">✓</div>
@@ -1121,7 +1120,7 @@ body{
       <div class="summary-card">
         <div class="summary-icon">👥</div>
         <div class="summary-title">Requester Registry</div>
-        <div class="summary-desc">Students, staff, and faculty with ID and department — required on Issue, Return, and Release.</div>
+        <div class="summary-desc">Staff and faculty with ID and department — required on Issue, Return, and Release.</div>
       </div>
       <div class="summary-card">
         <div class="summary-icon">📦</div>

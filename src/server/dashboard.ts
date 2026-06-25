@@ -16,7 +16,7 @@ export async function getDashboardStats() {
             select: {
               id: true,
               fullName: true,
-              studentId: true,
+              idNumber: true,
               personType: true,
               department: true,
             },

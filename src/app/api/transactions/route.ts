@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       include: {
         item: { select: { id: true, name: true } },
         user: { select: { id: true, name: true } },
-        borrower: { select: { id: true, fullName: true, studentId: true } },
+        borrower: { select: { id: true, fullName: true, idNumber: true } },
       },
       orderBy: { createdAt: "desc" },
       skip,
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     include: {
       item: { select: { id: true, name: true } },
       user: { select: { id: true, name: true } },
-      borrower: { select: { id: true, fullName: true, studentId: true } },
+      borrower: { select: { id: true, fullName: true, idNumber: true } },
     },
   });
 

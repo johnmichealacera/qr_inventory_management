@@ -57,7 +57,7 @@ interface Transaction {
   borrower: {
     id: string;
     fullName: string;
-    studentId: string;
+    idNumber: string;
     personType: string;
     department: string;
   } | null;
@@ -79,7 +79,7 @@ export function TransactionsClient() {
     {
       id: string;
       fullName: string;
-      studentId: string;
+      idNumber: string;
       personType: string;
       department: string;
     }[]
@@ -111,7 +111,7 @@ export function TransactionsClient() {
         allBorrowers.map((b) => ({
           id: b.id,
           fullName: b.fullName,
-          studentId: b.studentId,
+          idNumber: b.idNumber,
           personType: b.personType,
           department: b.department,
         }))

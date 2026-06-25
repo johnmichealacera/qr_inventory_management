@@ -185,59 +185,47 @@ async function main() {
 
   const borrowerSeeds = [
     {
-      fullName: "Ana Maria Santos",
-      studentId: "CRIM-2024-001",
-      personType: "STUDENT" as const,
-      department: "College of Criminology",
-      programSection: "BSCrim 4A",
-      contactPhone: "+639170000001",
-    },
-    {
-      fullName: "Juan Dela Cruz",
-      studentId: "CRIM-2024-014",
-      personType: "STUDENT" as const,
-      department: "College of Criminology",
-      programSection: "BSCrim 3B",
-      contactPhone: "+639170000002",
-    },
-    {
       fullName: "Prof. Elena Reyes",
-      studentId: "FAC-CRIM-012",
+      idNumber: "FAC-GSO-012",
       personType: "FACULTY" as const,
-      department: "College of Criminology",
-      programSection: null,
+      department: "General Supplies Office",
+      officeUnit: null,
       contactPhone: "+639170000099",
     },
     {
       fullName: "Maria Lopez",
-      studentId: "STAFF-GSO-001",
+      idNumber: "STAFF-GSO-001",
       personType: "STAFF" as const,
       department: "General Supplies Office",
-      programSection: null,
+      officeUnit: "Receiving desk",
       contactPhone: "+639170000088",
     },
   ];
 
+  await prisma.borrower.deleteMany({
+    where: { idNumber: { in: ["CRIM-2024-001", "CRIM-2024-014"] } },
+  });
+
   for (const b of borrowerSeeds) {
     await prisma.borrower.upsert({
-      where: { studentId: b.studentId },
+      where: { idNumber: b.idNumber },
       update: {
         fullName: b.fullName,
         personType: b.personType,
         department: b.department,
-        programSection: b.programSection,
+        officeUnit: b.officeUnit,
         contactPhone: b.contactPhone,
       },
       create: b,
     });
   }
-  console.log("Requesters (sample):", borrowerSeeds.map((b) => b.studentId).join(", "));
+  console.log("Requesters (sample):", borrowerSeeds.map((b) => b.idNumber).join(", "));
 
   const facultyBorrower = await prisma.borrower.findUnique({
-    where: { studentId: "FAC-CRIM-012" },
+    where: { idNumber: "FAC-GSO-012" },
   });
   const staffBorrower = await prisma.borrower.findUnique({
-    where: { studentId: "STAFF-GSO-001" },
+    where: { idNumber: "STAFF-GSO-001" },
   });
 
   if (facultyBorrower) {

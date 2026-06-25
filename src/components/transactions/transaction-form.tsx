@@ -33,7 +33,7 @@ interface Item {
 interface BorrowerOpt {
   id: string;
   fullName: string;
-  studentId: string;
+  idNumber: string;
   personType: string;
   department: string;
 }

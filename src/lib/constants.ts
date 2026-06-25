@@ -38,7 +38,6 @@ export const INVENTORY_TYPE_LABELS: Record<InventoryTypeName, string> = {
 };
 
 export const PERSON_TYPES = {
-  STUDENT: "STUDENT",
   STAFF: "STAFF",
   FACULTY: "FACULTY",
 } as const;
@@ -46,7 +45,6 @@ export const PERSON_TYPES = {
 export type PersonTypeName = (typeof PERSON_TYPES)[keyof typeof PERSON_TYPES];
 
 export const PERSON_TYPE_LABELS: Record<PersonTypeName, string> = {
-  STUDENT: "Student",
   STAFF: "Staff",
   FACULTY: "Faculty",
 };
@@ -75,10 +73,10 @@ export const PAGE_SIZE = 20;
 
 export function formatRequesterLine(requester: {
   fullName: string;
-  studentId: string;
+  idNumber: string;
   personType: string;
   department: string;
 }): string {
   const role = PERSON_TYPE_LABELS[requester.personType as PersonTypeName] ?? requester.personType;
-  return `${requester.fullName} (${requester.studentId}) · ${role} · ${requester.department}`;
+  return `${requester.fullName} (${requester.idNumber}) · ${role} · ${requester.department}`;
 }

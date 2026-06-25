@@ -21,7 +21,7 @@ interface Transaction {
   borrower: {
     id: string;
     fullName: string;
-    studentId: string;
+    idNumber: string;
     personType: string;
     department: string;
   } | null;

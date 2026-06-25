@@ -27,7 +27,7 @@ interface ReleaseRow {
   user: { name: string };
   borrower: {
     fullName: string;
-    studentId: string;
+    idNumber: string;
     personType: string;
     department: string;
   } | null;
@@ -100,7 +100,7 @@ export function ConsumableReleaseLog() {
                     <div>
                       <p className="font-medium">{tx.borrower.fullName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {tx.borrower.studentId} ·{" "}
+                        {tx.borrower.idNumber} ·{" "}
                         {PERSON_TYPE_LABELS[tx.borrower.personType as PersonTypeName] ??
                           tx.borrower.personType}
                       </p>

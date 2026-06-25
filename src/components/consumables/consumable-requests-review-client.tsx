@@ -36,7 +36,7 @@ type ReviewRequest = {
   user: { name: string; username: string };
   borrower: {
     fullName: string;
-    studentId: string;
+    idNumber: string;
     personType: string;
     department: string;
   };

@@ -79,10 +79,10 @@ export const transactionSchema = z
 
 export const createBorrowerSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
-  studentId: z.string().min(1, "ID number is required"),
-  personType: z.enum([PERSON_TYPES.STUDENT, PERSON_TYPES.STAFF, PERSON_TYPES.FACULTY]),
+  idNumber: z.string().min(1, "ID number is required"),
+  personType: z.enum([PERSON_TYPES.STAFF, PERSON_TYPES.FACULTY]),
   department: z.string().min(1, "Department is required"),
-  programSection: z.string().optional(),
+  officeUnit: z.string().optional(),
   contactPhone: z.string().optional(),
 });
 

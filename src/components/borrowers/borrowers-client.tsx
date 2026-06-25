@@ -38,10 +38,10 @@ import type { PersonTypeName } from "@/lib/constants";
 interface Borrower {
   id: string;
   fullName: string;
-  studentId: string;
+  idNumber: string;
   personType: string;
   department: string;
-  programSection: string | null;
+  officeUnit: string | null;
   contactPhone: string | null;
 }
 
@@ -68,7 +68,7 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
             <DialogHeader>
               <DialogTitle>Register requester</DialogTitle>
               <DialogDescription>
-                Students, staff, or faculty — used for borrow and consumable release tracking
+                Staff and faculty — used for borrow and consumable release tracking
               </DialogDescription>
             </DialogHeader>
             <BorrowerForm
@@ -99,7 +99,7 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                 <th className="p-3 font-medium">ID number</th>
                 <th className="p-3 font-medium">Type</th>
                 <th className="p-3 font-medium">Department</th>
-                <th className="p-3 font-medium">Program / section</th>
+                <th className="p-3 font-medium">Office / unit</th>
                 <th className="p-3 font-medium">Contact</th>
                 <th className="p-3 text-right font-medium">Actions</th>
               </tr>
@@ -108,12 +108,12 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
               {initialBorrowers.map((b) => (
                 <tr key={b.id} className="border-b last:border-0">
                   <td className="p-3 font-medium">{b.fullName}</td>
-                  <td className="p-3 text-muted-foreground">{b.studentId}</td>
+                  <td className="p-3 text-muted-foreground">{b.idNumber}</td>
                   <td className="p-3 text-muted-foreground">
                     {PERSON_TYPE_LABELS[b.personType as PersonTypeName] ?? b.personType}
                   </td>
                   <td className="p-3 text-muted-foreground">{b.department}</td>
-                  <td className="p-3 text-muted-foreground">{b.programSection ?? "—"}</td>
+                  <td className="p-3 text-muted-foreground">{b.officeUnit ?? "—"}</td>
                   <td className="p-3 text-muted-foreground">{b.contactPhone ?? "—"}</td>
                   <td className="p-3 text-right">
                     <div className="flex justify-end gap-1">
@@ -141,10 +141,10 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                           <BorrowerForm
                             defaultValues={{
                               fullName: b.fullName,
-                              studentId: b.studentId,
+                              idNumber: b.idNumber,
                               personType: b.personType as CreateBorrowerInput["personType"],
                               department: b.department,
-                              programSection: b.programSection ?? "",
+                              officeUnit: b.officeUnit ?? "",
                               contactPhone: b.contactPhone ?? "",
                             }}
                             submitLabel="Save"
@@ -210,10 +210,10 @@ function BorrowerForm({
     resolver: zodResolver(createBorrowerSchema),
     defaultValues: {
       fullName: defaultValues?.fullName ?? "",
-      studentId: defaultValues?.studentId ?? "",
-      personType: defaultValues?.personType ?? PERSON_TYPES.STUDENT,
+      idNumber: defaultValues?.idNumber ?? "",
+      personType: defaultValues?.personType ?? PERSON_TYPES.STAFF,
       department: defaultValues?.department ?? "",
-      programSection: defaultValues?.programSection ?? "",
+      officeUnit: defaultValues?.officeUnit ?? "",
       contactPhone: defaultValues?.contactPhone ?? "",
     },
   });
@@ -232,7 +232,7 @@ function BorrowerForm({
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="fullName">Full name</Label>
-        <Input id="fullName" placeholder="Juan Dela Cruz" {...register("fullName")} />
+        <Input id="fullName" placeholder="Maria Lopez" {...register("fullName")} />
         {errors.fullName && (
           <p className="text-xs text-destructive">{errors.fullName.message}</p>
         )}
@@ -249,9 +249,6 @@ function BorrowerForm({
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={PERSON_TYPES.STUDENT}>
-              {PERSON_TYPE_LABELS.STUDENT}
-            </SelectItem>
             <SelectItem value={PERSON_TYPES.STAFF}>{PERSON_TYPE_LABELS.STAFF}</SelectItem>
             <SelectItem value={PERSON_TYPES.FACULTY}>
               {PERSON_TYPE_LABELS.FACULTY}
@@ -263,16 +260,16 @@ function BorrowerForm({
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="studentId">ID number</Label>
+        <Label htmlFor="idNumber">ID number</Label>
         <Input
-          id="studentId"
+          id="idNumber"
           placeholder={
-            personType === PERSON_TYPES.STUDENT ? "2024-00001" : "EMP-00123"
+            personType === PERSON_TYPES.FACULTY ? "FAC-00123" : "STAFF-00123"
           }
-          {...register("studentId")}
+          {...register("idNumber")}
         />
-        {errors.studentId && (
-          <p className="text-xs text-destructive">{errors.studentId.message}</p>
+        {errors.idNumber && (
+          <p className="text-xs text-destructive">{errors.idNumber.message}</p>
         )}
       </div>
       <div className="space-y-2">
@@ -287,11 +284,11 @@ function BorrowerForm({
         )}
       </div>
       <div className="space-y-2">
-        <Label htmlFor="programSection">Program / section (optional)</Label>
+        <Label htmlFor="officeUnit">Office / unit (optional)</Label>
         <Input
-          id="programSection"
-          placeholder="BS Criminology - Section A"
-          {...register("programSection")}
+          id="officeUnit"
+          placeholder="e.g. Records unit, Faculty room 204"
+          {...register("officeUnit")}
         />
       </div>
       <div className="space-y-2">

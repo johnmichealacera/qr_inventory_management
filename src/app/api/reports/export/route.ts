@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
       borrower: {
         select: {
           fullName: true,
-          studentId: true,
+          idNumber: true,
           personType: true,
           department: true,
         },
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
         escapeCsv(r.type),
         String(r.quantity),
         escapeCsv(r.borrower?.fullName ?? ""),
-        escapeCsv(r.borrower?.studentId ?? ""),
+        escapeCsv(r.borrower?.idNumber ?? ""),
         escapeCsv(r.borrower?.personType ?? ""),
         escapeCsv(r.borrower?.department ?? ""),
         escapeCsv(r.user.name),
