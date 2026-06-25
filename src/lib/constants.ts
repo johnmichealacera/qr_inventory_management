@@ -2,6 +2,8 @@ export const ROLES = {
   ADMIN: "Admin",
   CUSTODIAN: "Custodian",
   AUDITOR: "Auditor",
+  FACULTY: "Faculty",
+  STAFF: "Staff",
 } as const;
 
 export type RoleName = (typeof ROLES)[keyof typeof ROLES];
@@ -47,6 +49,23 @@ export const PERSON_TYPE_LABELS: Record<PersonTypeName, string> = {
   STUDENT: "Student",
   STAFF: "Staff",
   FACULTY: "Faculty",
+};
+
+export const CONSUMABLE_REQUEST_STATUSES = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+  FULFILLED: "FULFILLED",
+} as const;
+
+export type ConsumableRequestStatusName =
+  (typeof CONSUMABLE_REQUEST_STATUSES)[keyof typeof CONSUMABLE_REQUEST_STATUSES];
+
+export const CONSUMABLE_REQUEST_STATUS_LABELS: Record<ConsumableRequestStatusName, string> = {
+  PENDING: "Pending review",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  FULFILLED: "Fulfilled",
 };
 
 /** Study scope: inventory limited to College of Criminology equipment */

@@ -1,14 +1,16 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { canManageInventory } from "@/lib/roles";
+import { canManageInventory, canSubmitConsumableRequest, canViewConsumables } from "@/lib/roles";
 import { getItemById, getItemStock } from "@/server/items";
 import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
 import { INVENTORY_TYPES } from "@/lib/constants";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
 import { ItemDetailActions } from "@/components/inventory/item-detail-actions";
+import { ConsumableRequestDialog } from "@/components/consumables/consumable-request-dialog";
 import {
   Table,
   TableBody,
@@ -30,7 +32,14 @@ interface PageProps {
 export default async function ConsumableDetailPage({ params }: PageProps) {
   const { id } = await params;
   const session = await auth();
-  const canManage = canManageInventory(session?.user?.role);
+  const role = session?.user?.role;
+
+  if (!canViewConsumables(role)) {
+    redirect("/dashboard");
+  }
+
+  const canManage = canManageInventory(role);
+  const canRequest = canSubmitConsumableRequest(role);
   const item = await getItemById(id);
   if (!item || item.inventoryType !== INVENTORY_TYPES.CONSUMABLE) notFound();
 
@@ -40,15 +49,24 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader title={item.name} description={item.description ?? undefined}>
-        {canManage && (
-          <ItemDetailActions
-            item={item}
-            listPath="/consumables"
-            inventoryType={INVENTORY_TYPES.CONSUMABLE}
-            currentStock={currentStock}
-            transactionCount={item._count.transactions}
-          />
-        )}
+        <div className="flex gap-2">
+          {canRequest && (
+            <ConsumableRequestDialog
+              itemId={item.id}
+              itemName={item.name}
+              trigger={<Button>Request this item</Button>}
+            />
+          )}
+          {canManage && (
+            <ItemDetailActions
+              item={item}
+              listPath="/consumables"
+              inventoryType={INVENTORY_TYPES.CONSUMABLE}
+              currentStock={currentStock}
+              transactionCount={item._count.transactions}
+            />
+          )}
+        </div>
       </PageHeader>
 
       {canManage && session?.user?.role === "Admin" && <ItemDeletePolicyNotice />}
@@ -91,10 +109,27 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Release history</CardTitle>
+              <CardTitle className="text-base">
+                {canRequest && !canManage ? "Stock status" : "Release history"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {item.transactions.length === 0 ? (
+              {canRequest && !canManage ? (
+                <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Available</dt>
+                    <dd className="mt-1">
+                      <Badge variant={isLow ? "destructive" : "secondary"}>
+                        {currentStock} units
+                      </Badge>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Reorder level</dt>
+                    <dd className="mt-1 font-medium">{item.reorderLevel}</dd>
+                  </div>
+                </dl>
+              ) : item.transactions.length === 0 ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
                   No releases yet
                 </p>
@@ -144,6 +179,7 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
           </Card>
         </div>
 
+        {!canRequest && (
         <div>
           <Card>
             <CardHeader>
@@ -160,6 +196,7 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
             </CardContent>
           </Card>
         </div>
+        )}
       </div>
     </div>
   );

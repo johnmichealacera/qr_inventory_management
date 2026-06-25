@@ -16,17 +16,22 @@ model Role {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  name         String
-  username     String        @unique
-  password     String
-  roleId       String
-  role         Role          @relation(fields: [roleId], references: [id])
-  transactions Transaction[]
-  auditLogs    AuditLog[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                 String              @id @default(cuid())
+  name               String
+  username           String              @unique
+  password           String
+  roleId             String
+  role               Role                @relation(fields: [roleId], references: [id])
+  borrowerId         String?             @unique
+  borrower           Borrower?           @relation(fields: [borrowerId], references: [id])
+  transactions       Transaction[]
+  auditLogs          AuditLog[]
+  consumableRequests ConsumableRequest[] @relation("RequestSubmitter")
+  reviewedRequests   ConsumableRequest[] @relation("RequestReviewer")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
+  @@index([borrowerId])
   @@map("users")
 }
 
@@ -42,7 +47,9 @@ model Borrower {
   contactPhone     String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
-  transactions     Transaction[]
+  transactions       Transaction[]
+  user               User?
+  consumableRequests ConsumableRequest[]
 
   @@map("borrowers")
 }
@@ -77,11 +84,47 @@ model Item {
   inventoryType      InventoryType   @default(BORROWABLE)
   category           Category        @relation(fields: [categoryId], references: [id])
   transactions       Transaction[]
+  consumableRequests ConsumableRequest[]
   qrCode             QRCode?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
   @@map("items")
+}
+
+enum ConsumableRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FULFILLED
+}
+
+/// Faculty/staff consumable request — catalog item or off-catalog (custom name)
+model ConsumableRequest {
+  id                String                  @id @default(cuid())
+  userId            String
+  borrowerId        String
+  itemId            String?
+  customItemName    String?
+  customDescription String?
+  quantity          Int
+  notes             String?
+  status            ConsumableRequestStatus @default(PENDING)
+  reviewedById      String?
+  reviewedAt        DateTime?
+  reviewNotes       String?
+  user              User                    @relation("RequestSubmitter", fields: [userId], references: [id])
+  borrower          Borrower                @relation(fields: [borrowerId], references: [id])
+  item              Item?                   @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  reviewedBy        User?                   @relation("RequestReviewer", fields: [reviewedById], references: [id])
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([userId])
+  @@index([borrowerId])
+  @@index([itemId])
+  @@index([status])
+  @@map("consumable_requests")
 }
 
 model Transaction {

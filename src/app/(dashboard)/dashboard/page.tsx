@@ -1,11 +1,35 @@
+import { auth } from "@/lib/auth";
+import { canManageInventory, isRequesterRole } from "@/lib/roles";
 import { getDashboardStats } from "@/server/dashboard";
+import { getMyRequestStats, getPendingRequestCountForReview } from "@/server/consumable-requests";
 import { PageHeader } from "@/components/layout/page-header";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { LowStockAlert } from "@/components/dashboard/low-stock-alert";
+import { RequesterDashboard } from "@/components/dashboard/requester-dashboard";
+import { CustodianRequestsAlert } from "@/components/dashboard/custodian-requests-alert";
 
 export default async function DashboardPage() {
-  const stats = await getDashboardStats();
+  const session = await auth();
+  const role = session?.user?.role;
+
+  if (isRequesterRole(role)) {
+    const stats = await getMyRequestStats();
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Request consumables from the General Supplies Office"
+        />
+        <RequesterDashboard stats={stats} />
+      </div>
+    );
+  }
+
+  const [stats, pendingRequests] = await Promise.all([
+    getDashboardStats(),
+    canManageInventory(role) ? getPendingRequestCountForReview() : Promise.resolve(0),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -13,6 +37,8 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Overview of your inventory system"
       />
+
+      {canManageInventory(role) && <CustodianRequestsAlert pendingCount={pendingRequests} />}
 
       <SummaryCards
         totalItems={stats.totalItems}

@@ -21,32 +21,90 @@ import {
   X,
   QrCode,
   UserRound,
+  ClipboardList,
+  ListOrdered,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ROLES } from "@/lib/constants";
 
-const navigation = [
+type NavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles?: string[];
+};
+
+const navigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Borrowable inventory", href: "/inventory", icon: Package },
   {
     name: "Consumables",
     href: "/consumables",
     icon: Boxes,
-    roles: ["Admin", "Custodian", "Auditor"],
+    roles: [
+      ROLES.ADMIN,
+      ROLES.CUSTODIAN,
+      ROLES.AUDITOR,
+      ROLES.FACULTY,
+      ROLES.STAFF,
+    ],
   },
-  { name: "Categories", href: "/categories", icon: FolderOpen },
+  {
+    name: "My requests",
+    href: "/my-requests",
+    icon: ListOrdered,
+    roles: [ROLES.FACULTY, ROLES.STAFF],
+  },
+  {
+    name: "Request queue",
+    href: "/consumable-requests",
+    icon: ClipboardList,
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN],
+  },
+  {
+    name: "Borrowable inventory",
+    href: "/inventory",
+    icon: Package,
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN, ROLES.AUDITOR],
+  },
+  {
+    name: "Categories",
+    href: "/categories",
+    icon: FolderOpen,
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN, ROLES.AUDITOR],
+  },
   {
     name: "Requesters",
     href: "/borrowers",
     icon: UserRound,
-    roles: ["Admin", "Custodian"],
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN],
   },
-  { name: "QR Scanner", href: "/scan", icon: ScanLine, roles: ["Admin", "Custodian"] },
-  { name: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { name: "Reports", href: "/reports", icon: FileBarChart },
-  { name: "Audit Logs", href: "/audit-logs", icon: Shield, roles: ["Admin", "Auditor"] },
-  { name: "Users", href: "/users", icon: Users, roles: ["Admin"] },
+  {
+    name: "QR Scanner",
+    href: "/scan",
+    icon: ScanLine,
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN],
+  },
+  {
+    name: "Transactions",
+    href: "/transactions",
+    icon: ArrowLeftRight,
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN, ROLES.AUDITOR],
+  },
+  {
+    name: "Reports",
+    href: "/reports",
+    icon: FileBarChart,
+    roles: [ROLES.ADMIN, ROLES.CUSTODIAN, ROLES.AUDITOR],
+  },
+  {
+    name: "Audit Logs",
+    href: "/audit-logs",
+    icon: Shield,
+    roles: [ROLES.ADMIN, ROLES.AUDITOR],
+  },
+  { name: "Users", href: "/users", icon: Users, roles: [ROLES.ADMIN] },
 ];
 
 export function Sidebar() {

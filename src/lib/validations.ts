@@ -11,6 +11,25 @@ export const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   roleId: z.string().min(1, "Role is required"),
+  borrowerId: z.string().optional(),
+});
+
+export const createConsumableRequestSchema = z
+  .object({
+    itemId: z.string().optional(),
+    customItemName: z.string().optional(),
+    customDescription: z.string().optional(),
+    quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+    notes: z.string().optional(),
+  })
+  .refine((data) => Boolean(data.itemId?.trim()) || Boolean(data.customItemName?.trim()), {
+    message: "Select a consumable item or enter a custom item name",
+    path: ["customItemName"],
+  });
+
+export const reviewConsumableRequestSchema = z.object({
+  status: z.enum(["APPROVED", "REJECTED", "FULFILLED"]),
+  reviewNotes: z.string().optional(),
 });
 
 export const updateUserSchema = z.object({
@@ -18,6 +37,7 @@ export const updateUserSchema = z.object({
   username: z.string().min(3).optional(),
   password: z.string().min(6).optional(),
   roleId: z.string().min(1).optional(),
+  borrowerId: z.string().nullable().optional(),
 });
 
 export const categorySchema = z.object({
@@ -91,3 +111,5 @@ export type TransactionInput = z.infer<typeof transactionSchema>;
 export type ReportFilterInput = z.infer<typeof reportFilterSchema>;
 export type CreateBorrowerInput = z.infer<typeof createBorrowerSchema>;
 export type UpdateBorrowerInput = z.infer<typeof updateBorrowerSchema>;
+export type CreateConsumableRequestInput = z.infer<typeof createConsumableRequestSchema>;
+export type ReviewConsumableRequestInput = z.infer<typeof reviewConsumableRequestSchema>;

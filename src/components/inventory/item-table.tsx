@@ -21,7 +21,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
-import { Eye, QrCode, Trash2 } from "lucide-react";
+import { Eye, QrCode, Trash2, ClipboardList } from "lucide-react";
+import { ConsumableRequestDialog } from "@/components/consumables/consumable-request-dialog";
 import { deleteItem } from "@/server/items";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -47,6 +48,7 @@ interface ItemTableProps {
   emptyAddHref?: string;
   emptyMessage?: string;
   canManage?: boolean;
+  canRequest?: boolean;
 }
 
 export function ItemTable({
@@ -55,6 +57,7 @@ export function ItemTable({
   emptyAddHref = "/inventory/new",
   emptyMessage = "No items found",
   canManage = false,
+  canRequest = false,
 }: ItemTableProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -170,6 +173,18 @@ export function ItemTable({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
+                    {canRequest && (
+                      <ConsumableRequestDialog
+                        itemId={item.id}
+                        itemName={item.name}
+                        trigger={
+                          <Button variant="outline" size="sm" className="h-8 gap-1 px-2 text-xs">
+                            <ClipboardList className="h-3.5 w-3.5" />
+                            Request
+                          </Button>
+                        }
+                      />
+                    )}
                     <Link href={`${detailBasePath}/${item.id}`}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <Eye className="h-4 w-4" />

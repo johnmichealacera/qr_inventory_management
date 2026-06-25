@@ -28,17 +28,19 @@ async function main() {
     create: { name: "Auditor" },
   });
 
-  const legacyStaffRole = await prisma.role.findUnique({ where: { name: "Staff" } });
-  if (legacyStaffRole) {
-    await prisma.user.updateMany({
-      where: { roleId: legacyStaffRole.id },
-      data: { roleId: custodianRole.id },
-    });
-    await prisma.role.delete({ where: { id: legacyStaffRole.id } });
-    console.log("Migrated legacy Staff role to Custodian");
-  }
+  const facultyRole = await prisma.role.upsert({
+    where: { name: "Faculty" },
+    update: {},
+    create: { name: "Faculty" },
+  });
 
-  console.log("Roles ready:", { adminRole, custodianRole, auditorRole });
+  const staffRole = await prisma.role.upsert({
+    where: { name: "Staff" },
+    update: {},
+    create: { name: "Staff" },
+  });
+
+  console.log("Roles ready:", { adminRole, custodianRole, auditorRole, facultyRole, staffRole });
 
   const hashedPassword = await bcrypt.hash("password123", 12);
 
@@ -206,6 +208,14 @@ async function main() {
       programSection: null,
       contactPhone: "+639170000099",
     },
+    {
+      fullName: "Maria Lopez",
+      studentId: "STAFF-GSO-001",
+      personType: "STAFF" as const,
+      department: "General Supplies Office",
+      programSection: null,
+      contactPhone: "+639170000088",
+    },
   ];
 
   for (const b of borrowerSeeds) {
@@ -223,11 +233,48 @@ async function main() {
   }
   console.log("Requesters (sample):", borrowerSeeds.map((b) => b.studentId).join(", "));
 
+  const facultyBorrower = await prisma.borrower.findUnique({
+    where: { studentId: "FAC-CRIM-012" },
+  });
+  const staffBorrower = await prisma.borrower.findUnique({
+    where: { studentId: "STAFF-GSO-001" },
+  });
+
+  if (facultyBorrower) {
+    await prisma.user.upsert({
+      where: { username: "faculty" },
+      update: { roleId: facultyRole.id, borrowerId: facultyBorrower.id },
+      create: {
+        name: "Prof. Elena Reyes",
+        username: "faculty",
+        password: hashedPassword,
+        roleId: facultyRole.id,
+        borrowerId: facultyBorrower.id,
+      },
+    });
+  }
+
+  if (staffBorrower) {
+    await prisma.user.upsert({
+      where: { username: "staff" },
+      update: { roleId: staffRole.id, borrowerId: staffBorrower.id },
+      create: {
+        name: "Maria Lopez",
+        username: "staff",
+        password: hashedPassword,
+        roleId: staffRole.id,
+        borrowerId: staffBorrower.id,
+      },
+    });
+  }
+
   console.log("Seed completed successfully!");
   console.log("\nDefault login credentials:");
   console.log("  Admin:     admin / password123");
   console.log("  Custodian: custodian / password123");
   console.log("  Auditor:   auditor / password123");
+  console.log("  Faculty:   faculty / password123");
+  console.log("  Staff:     staff / password123");
 }
 
 main()

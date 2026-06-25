@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { canManageInventory } from "@/lib/roles";
+import { canManageInventory, canSubmitConsumableRequest, canViewConsumables } from "@/lib/roles";
+import { redirect } from "next/navigation";
 import { getItems, getItemStock } from "@/server/items";
 import { INVENTORY_TYPES } from "@/lib/constants";
 import { PageHeader } from "@/components/layout/page-header";
@@ -10,7 +11,14 @@ import { Plus } from "lucide-react";
 
 export default async function ConsumablesPage() {
   const session = await auth();
-  const canManage = canManageInventory(session?.user?.role);
+  const role = session?.user?.role;
+
+  if (!canViewConsumables(role)) {
+    redirect("/dashboard");
+  }
+
+  const canManage = canManageInventory(role);
+  const canRequest = canSubmitConsumableRequest(role);
 
   const items = await getItems(undefined, undefined, INVENTORY_TYPES.CONSUMABLE);
 
@@ -25,7 +33,11 @@ export default async function ConsumablesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Consumables"
-        description="Supplies that are released when used (not returned). Track who received each release in the Release log tab."
+        description={
+          canRequest && !canManage
+            ? "View available supplies and submit requests for yourself. Off-catalog items can be requested from My requests."
+            : "Supplies that are released when used (not returned). Track who received each release in the Release log tab."
+        }
       >
         {canManage && (
           <Link href="/consumables/new">
@@ -37,7 +49,7 @@ export default async function ConsumablesPage() {
         )}
       </PageHeader>
 
-      <ConsumablesClient items={itemsWithStock} canManage={canManage} />
+      <ConsumablesClient items={itemsWithStock} canManage={canManage} canRequest={canRequest} />
     </div>
   );
 }

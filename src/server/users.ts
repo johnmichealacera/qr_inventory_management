@@ -35,6 +35,7 @@ export async function createUser(data: unknown) {
       username: parsed.username,
       password: hashedPassword,
       roleId: parsed.roleId,
+      borrowerId: parsed.borrowerId || null,
     },
     include: { role: true },
   });
@@ -59,6 +60,7 @@ export async function updateUser(id: string, data: unknown) {
   if (parsed.name) updateData.name = parsed.name;
   if (parsed.username) updateData.username = parsed.username;
   if (parsed.roleId) updateData.roleId = parsed.roleId;
+  if (parsed.borrowerId !== undefined) updateData.borrowerId = parsed.borrowerId || null;
   if (parsed.password) {
     updateData.password = await bcrypt.hash(parsed.password, 12);
   }
