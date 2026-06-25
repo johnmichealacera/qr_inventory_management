@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import { canManageInventory } from "@/lib/roles";
 import { getItemById, getItemStock } from "@/server/items";
 import { PageHeader } from "@/components/layout/page-header";
-import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
+// Panel feedback: delete policy notice hidden — revisit later if activation is needed
+// import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
@@ -47,7 +48,8 @@ export default async function ItemDetailPage({ params }: PageProps) {
         )}
       </PageHeader>
 
-      {canManage && session?.user?.role === "Admin" && <ItemDeletePolicyNotice />}
+      {/* Panel feedback: delete policy notice hidden — revisit later if activation is needed */}
+      {/* {canManage && session?.user?.role === "Admin" && <ItemDeletePolicyNotice />} */}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">

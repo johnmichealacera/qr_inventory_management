@@ -12,10 +12,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ItemForm } from "@/components/inventory/item-form";
-import { updateItem, deleteItem } from "@/server/items";
+import { updateItem /* , deleteItem */ } from "@/server/items";
 import { getCategories } from "@/server/categories";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil /* , Trash2 */ } from "lucide-react";
 import type { CreateItemInput } from "@/lib/validations";
 import type { InventoryTypeName } from "@/lib/constants";
 import { INVENTORY_TYPES } from "@/lib/constants";
@@ -52,8 +52,9 @@ export function ItemDetailActions({
   const router = useRouter();
   const { data: session } = useSession();
   const canManage = canManageInventory(session?.user?.role);
-  const isAdmin = session?.user?.role === "Admin";
-  const canDelete = isAdmin && currentStock === 0 && transactionCount === 0;
+  // Panel feedback: delete UI hidden — revisit later if activation is needed
+  // const isAdmin = session?.user?.role === "Admin";
+  // const canDelete = isAdmin && currentStock === 0 && transactionCount === 0;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -74,22 +75,23 @@ export function ItemDetailActions({
     }
   }
 
-  async function handleDelete() {
-    if (currentStock > 0 || transactionCount > 0) {
-      toast.error(
-        `Cannot delete "${item.name}": ${currentStock} on hand and ${transactionCount} transaction(s). Only items with no stock and no history can be deleted.`
-      );
-      return;
-    }
-    if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
-    try {
-      await deleteItem(item.id);
-      toast.success("Item deleted");
-      router.push(listPath);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete");
-    }
-  }
+  // Panel feedback: delete handler hidden — revisit later if activation is needed
+  // async function handleDelete() {
+  //   if (currentStock > 0 || transactionCount > 0) {
+  //     toast.error(
+  //       `Cannot delete "${item.name}": ${currentStock} on hand and ${transactionCount} transaction(s). Only items with no stock and no history can be deleted.`
+  //     );
+  //     return;
+  //   }
+  //   if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
+  //   try {
+  //     await deleteItem(item.id);
+  //     toast.success("Item deleted");
+  //     router.push(listPath);
+  //   } catch (error) {
+  //     toast.error(error instanceof Error ? error.message : "Failed to delete");
+  //   }
+  // }
 
   if (!canManage) {
     return null;
@@ -128,7 +130,8 @@ export function ItemDetailActions({
           </DialogContent>
         </Dialog>
 
-        {isAdmin && (
+        {/* Panel feedback: delete button hidden — revisit later if activation is needed */}
+        {/* {isAdmin && (
           <Button
             variant="destructive"
             size="sm"
@@ -143,9 +146,10 @@ export function ItemDetailActions({
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
-        )}
+        )} */}
       </div>
-      {isAdmin && !canDelete && (
+      {/* Panel feedback: delete unavailable message hidden — revisit later if activation is needed */}
+      {/* {isAdmin && !canDelete && (
         <p className="max-w-md text-right text-xs text-muted-foreground">
           Delete unavailable:{" "}
           {currentStock > 0
@@ -153,7 +157,7 @@ export function ItemDetailActions({
             : "this item has transaction history"}
           .
         </p>
-      )}
+      )} */}
     </div>
   );
 }

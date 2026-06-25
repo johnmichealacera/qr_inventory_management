@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserSchema, type CreateUserInput } from "@/lib/validations";
-import { getUsers, getRoles, createUser, deleteUser } from "@/server/users";
+import { getUsers, getRoles, createUser /* , deleteUser */ } from "@/server/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, /* Trash2, */ Loader2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -71,16 +71,17 @@ export function UsersClient() {
     loadData();
   }, []);
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-    try {
-      await deleteUser(id);
-      toast.success(`User "${name}" deleted`);
-      loadData();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete user");
-    }
-  }
+  // Panel feedback: delete handler hidden — revisit later if activation is needed
+  // async function handleDelete(id: string, name: string) {
+  //   if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+  //   try {
+  //     await deleteUser(id);
+  //     toast.success(`User "${name}" deleted`);
+  //     loadData();
+  //   } catch (error) {
+  //     toast.error(error instanceof Error ? error.message : "Failed to delete user");
+  //   }
+  // }
 
   if (isLoading && users.length === 0) {
     return (
@@ -130,7 +131,8 @@ export function UsersClient() {
                 <TableHead>Name</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {/* Panel feedback: Actions column (delete only) hidden — revisit later if needed */}
+                {/* <TableHead className="text-right">Actions</TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -151,7 +153,8 @@ export function UsersClient() {
                       {user.role.name === "Staff" ? "Custodian" : user.role.name}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  {/* Panel feedback: delete button hidden — revisit later if activation is needed */}
+                  {/* <TableCell className="text-right">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -160,7 +163,7 @@ export function UsersClient() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))}
             </TableBody>

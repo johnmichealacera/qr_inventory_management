@@ -8,7 +8,7 @@ import { createBorrowerSchema, type CreateBorrowerInput } from "@/lib/validation
 import {
   createBorrower,
   updateBorrower,
-  deleteBorrower,
+  // deleteBorrower,
 } from "@/server/borrowers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, Users } from "lucide-react";
+import { Plus, Pencil, /* Trash2, */ Loader2, Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { PERSON_TYPE_LABELS, PERSON_TYPES } from "@/lib/constants";
 import type { PersonTypeName } from "@/lib/constants";
@@ -157,7 +157,8 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                           />
                         </DialogContent>
                       </Dialog>
-                      {isAdmin && (
+                      {/* Panel feedback: delete button hidden — revisit later if activation is needed */}
+                      {/* {isAdmin && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -177,7 +178,7 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
-                      )}
+                      )} */}
                     </div>
                   </td>
                 </tr>

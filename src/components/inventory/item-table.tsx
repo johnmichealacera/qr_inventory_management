@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,14 +20,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
-import { Eye, QrCode, Trash2, ClipboardList } from "lucide-react";
+import { Eye, QrCode, /* Trash2, */ ClipboardList } from "lucide-react";
 import { ConsumableRequestDialog } from "@/components/consumables/consumable-request-dialog";
-import { deleteItem } from "@/server/items";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+// import { deleteItem } from "@/server/items";
+// import { toast } from "sonner";
+// import { useRouter } from "next/navigation";
+// import { useSession } from "next-auth/react";
 import { INVENTORY_TYPE_LABELS } from "@/lib/constants";
-import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
+// Panel feedback: delete UI hidden — revisit later if activation is needed
+// import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
 
 interface Item {
   id: string;
@@ -59,30 +59,31 @@ export function ItemTable({
   canManage = false,
   canRequest = false,
 }: ItemTableProps) {
-  const router = useRouter();
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "Admin";
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Panel feedback: delete UI hidden — revisit later if activation is needed
+  // const router = useRouter();
+  // const { data: session } = useSession();
+  // const isAdmin = session?.user?.role === "Admin";
+  // const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  async function handleDelete(id: string, name: string, stock: number, txCount: number) {
-    if (stock > 0 || txCount > 0) {
-      toast.error(
-        `Cannot delete "${name}": ${stock} on hand and ${txCount} transaction(s). Clear stock first.`
-      );
-      return;
-    }
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    setDeletingId(id);
-    try {
-      await deleteItem(id);
-      toast.success(`"${name}" has been deleted`);
-      router.refresh();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete item");
-    } finally {
-      setDeletingId(null);
-    }
-  }
+  // async function handleDelete(id: string, name: string, stock: number, txCount: number) {
+  //   if (stock > 0 || txCount > 0) {
+  //     toast.error(
+  //       `Cannot delete "${name}": ${stock} on hand and ${txCount} transaction(s). Clear stock first.`
+  //     );
+  //     return;
+  //   }
+  //   if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  //   setDeletingId(id);
+  //   try {
+  //     await deleteItem(id);
+  //     toast.success(`"${name}" has been deleted`);
+  //     router.refresh();
+  //   } catch (error) {
+  //     toast.error(error instanceof Error ? error.message : "Failed to delete item");
+  //   } finally {
+  //     setDeletingId(null);
+  //   }
+  // }
 
   if (items.length === 0) {
     return (
@@ -101,7 +102,8 @@ export function ItemTable({
 
   return (
     <div className="space-y-3">
-      {isAdmin && <ItemDeletePolicyNotice />}
+      {/* Panel feedback: delete policy notice hidden — revisit later if activation is needed */}
+      {/* {isAdmin && <ItemDeletePolicyNotice />} */}
       <div className="rounded-md border">
       <Table>
         <TableHeader>
@@ -118,7 +120,7 @@ export function ItemTable({
           {items.map((item) => {
             const stock = item.currentStock ?? 0;
             const isLow = stock <= item.reorderLevel;
-            const canDelete = isAdmin && stock === 0 && item._count.transactions === 0;
+            // const canDelete = isAdmin && stock === 0 && item._count.transactions === 0;
 
             return (
               <TableRow key={item.id}>
@@ -190,7 +192,8 @@ export function ItemTable({
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>
-                    {isAdmin && (
+                    {/* Panel feedback: delete button hidden — revisit later if activation is needed */}
+                    {/* {isAdmin && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -212,7 +215,7 @@ export function ItemTable({
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
+                    )} */}
                   </div>
                 </TableCell>
               </TableRow>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { categorySchema, type CategoryInput } from "@/lib/validations";
-import { createCategory, updateCategory, deleteCategory } from "@/server/categories";
+import { createCategory, updateCategory /* , deleteCategory */ } from "@/server/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, FolderOpen } from "lucide-react";
+import { Plus, Pencil, /* Trash2, */ Loader2, FolderOpen } from "lucide-react";
 
 interface Category {
   id: string;
@@ -122,7 +122,8 @@ export function CategoriesClient({
                         />
                       </DialogContent>
                     </Dialog>
-                    {isAdmin && (
+                    {/* Panel feedback: delete button hidden — revisit later if activation is needed */}
+                    {/* {isAdmin && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -142,7 +143,7 @@ export function CategoriesClient({
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                    )}
+                    )} */}
                   </div>
                 )}
               </CardHeader>
