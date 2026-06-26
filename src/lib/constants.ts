@@ -89,6 +89,8 @@ export const EQUIPMENT_PROGRAM_CRIMINOLOGY = "CRIMINOLOGY" as const;
 
 export const PAGE_SIZE = 20;
 
+export const CONSUMABLES_PAGE_SIZE = 10;
+
 export function formatRequesterLine(requester: {
   fullName: string;
   idNumber: string;

@@ -7,10 +7,17 @@ interface PaginationProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  /** When true, show controls even for a single page (e.g. to display page indicator) */
+  showSinglePage?: boolean;
 }
 
-export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
-  if (totalPages <= 1) return null;
+export function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+  showSinglePage = false,
+}: PaginationProps) {
+  if (totalPages <= 1 && !showSinglePage) return null;
 
   return (
     <div className="flex items-center justify-between px-2 py-4">

@@ -1,15 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ItemTable } from "@/components/inventory/item-table";
 import { ConsumableReleaseLog } from "@/components/consumables/consumable-release-log";
 import { Pagination } from "@/components/layout/pagination";
 import { getItemsPaginated, getItemStock } from "@/server/items";
-import { INVENTORY_TYPES } from "@/lib/constants";
+import { getCategories } from "@/server/categories";
+import { CONSUMABLES_PAGE_SIZE, INVENTORY_TYPES } from "@/lib/constants";
+import { mapSelectItems } from "@/lib/select-items";
 import { Package, ClipboardList, ListOrdered, Loader2, Search } from "lucide-react";
 
 interface Item {
@@ -24,6 +34,11 @@ interface Item {
   currentStock?: number;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export function ConsumablesClient({
   canAddConsumables = false,
   canViewReleaseLog = false,
@@ -36,12 +51,20 @@ export function ConsumablesClient({
   canRequest?: boolean;
 }) {
   const [items, setItems] = useState<Item[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getCategories().then((cats) =>
+      setCategories(cats.map((c) => ({ id: c.id, name: c.name })))
+    );
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -50,36 +73,56 @@ export function ConsumablesClient({
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, categoryId]);
 
-  const loadData = useCallback(async (p: number) => {
-    setIsLoading(true);
-    try {
-      const result = await getItemsPaginated({
-        page: p,
-        inventoryType: INVENTORY_TYPES.CONSUMABLE,
-        search: debouncedSearch || undefined,
-      });
+  const categorySelectItems = useMemo(
+    () => [
+      { value: "__all__", label: "All categories" },
+      ...mapSelectItems(categories, (c) => c.id, (c) => c.name),
+    ],
+    [categories]
+  );
 
-      const itemsWithStock = await Promise.all(
-        result.items.map(async (item) => ({
-          ...item,
-          currentStock: await getItemStock(item.id),
-        }))
-      );
+  const selectedCategoryName = useMemo(
+    () => categories.find((c) => c.id === categoryId)?.name,
+    [categories, categoryId]
+  );
 
-      setItems(itemsWithStock);
-      setTotal(result.total);
-      setTotalPages(result.totalPages);
-      setPage(result.page);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [debouncedSearch]);
+  const loadData = useCallback(
+    async (p: number) => {
+      setIsLoading(true);
+      try {
+        const result = await getItemsPaginated({
+          page: p,
+          limit: CONSUMABLES_PAGE_SIZE,
+          inventoryType: INVENTORY_TYPES.CONSUMABLE,
+          search: debouncedSearch || undefined,
+          categoryId: categoryId || undefined,
+        });
+
+        const itemsWithStock = await Promise.all(
+          result.items.map(async (item) => ({
+            ...item,
+            currentStock: await getItemStock(item.id),
+          }))
+        );
+
+        setItems(itemsWithStock);
+        setTotal(result.total);
+        setTotalPages(result.totalPages);
+        setPage(result.page);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [debouncedSearch, categoryId]
+  );
 
   useEffect(() => {
     void loadData(page);
-  }, [debouncedSearch, page, loadData]);
+  }, [debouncedSearch, categoryId, page, loadData]);
+
+  const hasFilters = Boolean(debouncedSearch || categoryId);
 
   return (
     <Tabs defaultValue="items" className="space-y-4">
@@ -107,15 +150,43 @@ export function ConsumablesClient({
       </TabsList>
 
       <TabsContent value="items" className="space-y-4">
-        <div className="relative max-w-md">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by consumable name..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="grid gap-4 sm:grid-cols-2 lg:max-w-2xl">
+          <div className="space-y-2">
+            <Label htmlFor="consumable-search">Search</Label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="consumable-search"
+                type="search"
+                placeholder="Consumable name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Category</Label>
+            <Select
+              items={categorySelectItems}
+              value={categoryId || "__all__"}
+              onValueChange={(val) =>
+                setCategoryId(val === "__all__" ? "" : (val ?? ""))
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All categories</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {canRequest && !canAddConsumables && (
@@ -139,8 +210,10 @@ export function ConsumablesClient({
           <>
             {total > 0 && (
               <p className="text-sm text-muted-foreground">
-                {total} consumable{total === 1 ? "" : "s"}
+                Showing page {page} of {totalPages} ({total} consumable
+                {total === 1 ? "" : "s"}
                 {debouncedSearch ? ` matching "${debouncedSearch}"` : ""}
+                {selectedCategoryName ? ` in ${selectedCategoryName}` : ""})
               </p>
             )}
             <ItemTable
@@ -148,8 +221,8 @@ export function ConsumablesClient({
               detailBasePath="/consumables"
               emptyAddHref="/consumables/new"
               emptyMessage={
-                debouncedSearch
-                  ? "No consumables match your search"
+                hasFilters
+                  ? "No consumables match your filters"
                   : "No consumable items yet"
               }
               canManage={canManageItems}
