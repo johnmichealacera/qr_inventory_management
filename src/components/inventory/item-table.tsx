@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
-import { Eye, QrCode, /* Trash2, */ ClipboardList } from "lucide-react";
+import { Eye, QrCode, ScanLine, /* Trash2, */ ClipboardList } from "lucide-react";
 import { ConsumableRequestDialog } from "@/components/consumables/consumable-request-dialog";
 // import { deleteItem } from "@/server/items";
 // import { toast } from "sonner";
@@ -49,6 +49,7 @@ interface ItemTableProps {
   emptyMessage?: string;
   canManage?: boolean;
   canRequest?: boolean;
+  canScan?: boolean;
 }
 
 export function ItemTable({
@@ -58,6 +59,7 @@ export function ItemTable({
   emptyMessage = "No items found",
   canManage = false,
   canRequest = false,
+  canScan = false,
 }: ItemTableProps) {
   // Panel feedback: delete UI hidden — revisit later if activation is needed
   // const router = useRouter();
@@ -186,6 +188,16 @@ export function ItemTable({
                           </Button>
                         }
                       />
+                    )}
+                    {canScan && item.qrCode && (
+                      <Link
+                        href={`/scan?value=${encodeURIComponent(item.qrCode.value)}`}
+                        title="Scan to transact"
+                      >
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <ScanLine className="h-4 w-4" />
+                        </Button>
+                      </Link>
                     )}
                     <Link href={`${detailBasePath}/${item.id}`}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">

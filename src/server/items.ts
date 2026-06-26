@@ -12,6 +12,7 @@ import {
 } from "@/lib/constants";
 import type { InventoryTypeName } from "@/lib/constants";
 import { canManageConsumables, canManageInventory } from "@/lib/roles";
+import { BORROWABLE_INVENTORY_ENABLED } from "@/lib/features";
 import { revalidatePath } from "next/cache";
 import QRCode from "qrcode";
 
@@ -283,10 +284,10 @@ export async function deleteItem(id: string) {
 
 export async function getItemByQRValue(qrValue: string) {
   const qrCode = await db.qRCode.findUnique({
-    where: { value: qrValue },
+    where: { value: qrValue.trim() },
     include: {
       item: {
-        include: { category: true },
+        include: { category: true, qrCode: true },
       },
     },
   });
@@ -296,6 +297,27 @@ export async function getItemByQRValue(qrValue: string) {
 
   const stock = await getItemStock(qrCode.itemId);
   return { ...qrCode.item, currentStock: stock };
+}
+
+/** Authenticated QR lookup for the scanner page (Admin/Custodian). */
+export async function lookupItemForScan(qrValue: string) {
+  await requireRole(["Admin", "Custodian"]);
+  const trimmed = qrValue.trim();
+  if (!trimmed) return null;
+
+  const item = await getItemByQRValue(trimmed);
+  if (!item) return null;
+
+  if (
+    !BORROWABLE_INVENTORY_ENABLED &&
+    item.inventoryType === INVENTORY_TYPES.BORROWABLE
+  ) {
+    throw new Error(
+      "Borrowable equipment scanning is not active. Scan a consumable item QR code instead."
+    );
+  }
+
+  return item;
 }
 
 export async function generateQRCodeDataURL(value: string): Promise<string> {

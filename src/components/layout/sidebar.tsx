@@ -117,10 +117,7 @@ export function Sidebar() {
   const userRole = session?.user?.role;
 
   const filteredNav = navigation.filter((item) => {
-    if (
-      !BORROWABLE_INVENTORY_ENABLED &&
-      (item.href === "/inventory" || item.href === "/scan")
-    ) {
+    if (!BORROWABLE_INVENTORY_ENABLED && item.href === "/inventory") {
       return false;
     }
     return !item.roles || (userRole && item.roles.includes(userRole));

@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Download, Loader2, ScanLine } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface QRCodeDisplayProps {
   value: string;
   itemName: string;
+  scanHref?: string;
 }
 
-export function QRCodeDisplay({ value, itemName }: QRCodeDisplayProps) {
+export function QRCodeDisplay({ value, itemName, scanHref }: QRCodeDisplayProps) {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,10 +63,21 @@ export function QRCodeDisplay({ value, itemName }: QRCodeDisplayProps) {
     <div className="flex flex-col items-center gap-4">
       <img src={dataUrl} alt={`QR Code for ${itemName}`} className="rounded-lg border" />
       <p className="text-xs text-muted-foreground">{value}</p>
-      <Button variant="outline" size="sm" onClick={handleDownload}>
-        <Download className="mr-2 h-4 w-4" />
-        Download QR Code
-      </Button>
+      <div className="flex flex-wrap justify-center gap-2">
+        {scanHref && (
+          <Link
+            href={scanHref}
+            className={cn(buttonVariants({ size: "sm" }), "inline-flex items-center")}
+          >
+            <ScanLine className="mr-2 h-4 w-4" />
+            Scan to transact
+          </Link>
+        )}
+        <Button variant="outline" size="sm" onClick={handleDownload}>
+          <Download className="mr-2 h-4 w-4" />
+          Download QR Code
+        </Button>
+      </div>
     </div>
   );
 }

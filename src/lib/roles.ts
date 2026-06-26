@@ -57,3 +57,8 @@ export function canViewConsumables(role?: string | null): boolean {
 export function canViewReleaseLog(role?: string | null): boolean {
   return role === ROLES.ADMIN || role === ROLES.CUSTODIAN;
 }
+
+/** Admin or Custodian — QR scanner and stock movements at the desk. */
+export function canUseQrScanner(role?: string | null): boolean {
+  return canManageInventory(role);
+}

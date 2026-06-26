@@ -24,7 +24,7 @@ import { TransactionForm } from "@/components/transactions/transaction-form";
 import { Pagination } from "@/components/layout/pagination";
 import { getTransactions } from "@/server/transactions";
 import { getItems } from "@/server/items";
-import { getBorrowers } from "@/server/borrowers";
+import { getBorrowersForTransactions } from "@/server/borrowers";
 import { createTransaction } from "@/server/transactions";
 import { format } from "date-fns";
 import {
@@ -106,7 +106,7 @@ export function TransactionsClient() {
           undefined,
           BORROWABLE_INVENTORY_ENABLED ? undefined : INVENTORY_TYPES.CONSUMABLE
         ),
-        getBorrowers(),
+        getBorrowersForTransactions(),
       ]);
       setTransactions(txResult.transactions);
       setTotalPages(txResult.totalPages);

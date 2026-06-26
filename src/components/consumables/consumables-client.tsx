@@ -225,9 +225,10 @@ export function ConsumablesClient({
                   ? "No consumables match your filters"
                   : "No consumable items yet"
               }
-              canManage={canManageItems}
-              canRequest={canRequest}
-            />
+          canManage={canManageItems}
+          canRequest={canRequest}
+          canScan={canManageItems}
+        />
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}

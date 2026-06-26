@@ -1,17 +1,25 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { canManageConsumables, canSubmitConsumableRequest, canViewConsumables, canViewReleaseLog } from "@/lib/roles";
+import {
+  canManageConsumables,
+  canSubmitConsumableRequest,
+  canUseQrScanner,
+  canViewConsumables,
+  canViewReleaseLog,
+} from "@/lib/roles";
 import { getItemById, getItemStock } from "@/server/items";
 // Panel feedback: delete policy notice hidden — revisit later if activation is needed
 // import { ItemDeletePolicyNotice } from "@/components/inventory/item-delete-policy-notice";
 import { INVENTORY_TYPES } from "@/lib/constants";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRCodeDisplay } from "@/components/inventory/qr-code-display";
 import { ItemDetailActions } from "@/components/inventory/item-detail-actions";
 import { ConsumableRequestDialog } from "@/components/consumables/consumable-request-dialog";
+import { ScanLine } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -25,6 +33,7 @@ import {
   CONSUMABLE_TRANSACTION_TYPE_LABELS,
   formatRequesterLine,
 } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -42,6 +51,7 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
   const canEditConsumable = canManageConsumables(role);
   const canViewReleases = canViewReleaseLog(role);
   const canRequest = canSubmitConsumableRequest(role);
+  const canScan = canUseQrScanner(role);
   const item = await getItemById(id);
   if (!item || item.inventoryType !== INVENTORY_TYPES.CONSUMABLE) notFound();
 
@@ -51,13 +61,22 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader title={item.name} description={item.description ?? undefined}>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {canRequest && (
             <ConsumableRequestDialog
               itemId={item.id}
               itemName={item.name}
               trigger={<Button>Request this item</Button>}
             />
+          )}
+          {canScan && item.qrCode && (
+            <Link
+              href={`/scan?value=${encodeURIComponent(item.qrCode.value)}`}
+              className={cn(buttonVariants({ variant: "outline" }), "inline-flex items-center")}
+            >
+              <ScanLine className="mr-2 h-4 w-4" />
+              Scan to transact
+            </Link>
           )}
           {canEditConsumable && (
             <ItemDetailActions
@@ -182,7 +201,7 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
           </Card>
         </div>
 
-        {!canRequest && (
+        {canScan && (
         <div>
           <Card>
             <CardHeader>
@@ -190,7 +209,11 @@ export default async function ConsumableDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent>
               {item.qrCode ? (
-                <QRCodeDisplay value={item.qrCode.value} itemName={item.name} />
+                <QRCodeDisplay
+                  value={item.qrCode.value}
+                  itemName={item.name}
+                  scanHref={`/scan?value=${encodeURIComponent(item.qrCode.value)}`}
+                />
               ) : (
                 <p className="text-center text-sm text-muted-foreground">
                   No QR code generated

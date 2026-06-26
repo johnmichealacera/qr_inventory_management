@@ -87,6 +87,7 @@ export async function createTransaction(data: unknown) {
   revalidatePath("/consumables");
   revalidatePath("/transactions");
   revalidatePath("/reports");
+  revalidatePath("/scan");
   return transaction;
 }
 

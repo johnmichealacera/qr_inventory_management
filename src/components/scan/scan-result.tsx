@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTransaction } from "@/server/transactions";
-import { getBorrowers } from "@/server/borrowers";
+import { getBorrowersForTransactions } from "@/server/borrowers";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine, RotateCcw, Loader2, X } from "lucide-react";
 import {
@@ -80,11 +80,20 @@ const consumableActions = [
   },
   {
     type: "OUT" as const,
-    label: "Release",
+    label: "Release to requester",
     icon: ArrowUpFromLine,
     color: "bg-blue-600 hover:bg-blue-700",
   },
 ];
+
+function transactionNeedsRequester(
+  type: "IN" | "OUT" | "RETURN",
+  isConsumable: boolean
+) {
+  if (type === "IN") return false;
+  if (type === "OUT") return true;
+  return !isConsumable && type === "RETURN";
+}
 
 export function ScanResult({ item, onClear }: ScanResultProps) {
   const router = useRouter();
@@ -102,7 +111,12 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getBorrowers().then(setBorrowers).catch(() => setBorrowers([]));
+    getBorrowersForTransactions()
+      .then(setBorrowers)
+      .catch(() => {
+        setBorrowers([]);
+        toast.error("Could not load requester list");
+      });
   }, []);
 
   const borrowerSelectItems = useMemo(
@@ -114,12 +128,21 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
   useEffect(() => {
     setSelectedType(null);
     setBorrowerId("");
+    setQuantity(1);
+    setNotes("");
   }, [item.id]);
+
+  const needsRequester =
+    selectedType !== null && transactionNeedsRequester(selectedType, isConsumable);
 
   async function handleSubmit() {
     if (!selectedType) return;
-    if ((selectedType === "OUT" || selectedType === "RETURN") && !borrowerId) {
-      toast.error("Select a requester for issuance, release, or return");
+    if (needsRequester && !borrowerId) {
+      toast.error(
+        isConsumable
+          ? "Select the requester who received this release"
+          : "Select a requester for issuance or return"
+      );
       return;
     }
     setIsSubmitting(true);
@@ -130,7 +153,7 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
         type: selectedType,
         quantity,
         notes: notes || undefined,
-        borrowerId: selectedType === "IN" ? undefined : borrowerId || undefined,
+        borrowerId: needsRequester ? borrowerId : undefined,
       });
       const verb =
         selectedType === "IN"
@@ -151,6 +174,17 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
   }
 
   const isLow = item.currentStock <= item.reorderLevel;
+
+  const confirmLabel =
+    selectedType === "IN"
+      ? isConsumable
+        ? "Receive stock"
+        : "Receive"
+      : selectedType === "OUT"
+        ? isConsumable
+          ? "Release"
+          : "Issue"
+        : "Return";
 
   return (
     <Card>
@@ -177,6 +211,12 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
               Stock: {item.currentStock}
             </Badge>
           </div>
+          {isConsumable && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Consumable: receive stock (IN) or release to a registered requester (OUT). Returns
+              are not recorded for consumables.
+            </p>
+          )}
         </div>
 
         <div>
@@ -200,9 +240,9 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
 
         {selectedType && (
           <div className="space-y-4">
-            {(selectedType === "OUT" || selectedType === "RETURN") && (
+            {needsRequester && (
               <div className="space-y-2">
-                <Label>Requester</Label>
+                <Label>{isConsumable ? "Released to (requester)" : "Requester"}</Label>
                 <Select
                   items={borrowerSelectItems}
                   value={borrowerId}
@@ -248,17 +288,10 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
             <Button
               className="w-full"
               onClick={handleSubmit}
-              disabled={isSubmitting || quantity < 1}
+              disabled={isSubmitting || quantity < 1 || (needsRequester && !borrowerId)}
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Confirm{" "}
-              {selectedType === "IN"
-                ? "Receive"
-                : selectedType === "OUT"
-                  ? isConsumable
-                    ? "Release"
-                    : "Issue"
-                  : "Return"}
+              Confirm {confirmLabel}
             </Button>
           </div>
         )}

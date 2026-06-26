@@ -30,6 +30,14 @@ export async function getBorrowers(search?: string) {
   });
 }
 
+/** Requester list for QR scan and manual transactions (operational roles). */
+export async function getBorrowersForTransactions() {
+  await requireRole(["Admin", "Custodian"]);
+  return db.borrower.findMany({
+    orderBy: [{ department: "asc" }, { fullName: "asc" }],
+  });
+}
+
 export async function getBorrowersPaginated(params?: {
   page?: number;
   limit?: number;
