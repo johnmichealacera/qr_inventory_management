@@ -4,23 +4,60 @@ import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
 import { requireRole } from "@/lib/auth";
 import { createBorrowerSchema, updateBorrowerSchema } from "@/lib/validations";
+import { PAGE_SIZE } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/generated/prisma/client";
 
-export async function getBorrowers(search?: string) {
-  await requireRole(["Admin", "Custodian", "Auditor"]);
+function borrowerSearchWhere(search?: string) {
   const where: Record<string, unknown> = {};
-  if (search?.trim()) {
+  const q = search?.trim();
+  if (q) {
     where.OR = [
-      { fullName: { contains: search, mode: "insensitive" } },
-      { idNumber: { contains: search, mode: "insensitive" } },
-      { department: { contains: search, mode: "insensitive" } },
+      { fullName: { contains: q, mode: "insensitive" } },
+      { idNumber: { contains: q, mode: "insensitive" } },
+      { department: { contains: q, mode: "insensitive" } },
+      { officeUnit: { contains: q, mode: "insensitive" } },
     ];
   }
+  return where;
+}
+
+export async function getBorrowers(search?: string) {
+  await requireRole(["Admin", "Custodian", "Auditor"]);
   return db.borrower.findMany({
-    where,
+    where: borrowerSearchWhere(search),
     orderBy: [{ department: "asc" }, { fullName: "asc" }],
   });
+}
+
+export async function getBorrowersPaginated(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) {
+  await requireRole(["Admin", "Custodian"]);
+
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? PAGE_SIZE;
+  const skip = (page - 1) * limit;
+  const where = borrowerSearchWhere(params?.search);
+
+  const [borrowers, total] = await Promise.all([
+    db.borrower.findMany({
+      where,
+      orderBy: [{ department: "asc" }, { fullName: "asc" }],
+      skip,
+      take: limit,
+    }),
+    db.borrower.count({ where }),
+  ]);
+
+  return {
+    borrowers,
+    total,
+    page,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
 }
 
 export async function getBorrowerById(id: string) {

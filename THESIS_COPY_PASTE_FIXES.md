@@ -904,4 +904,77 @@ Dean, College of Information Technology
 
 ---
 
-*After pasting all blocks, run Find for: `student`, `Student`, `4.89`, `Program / section`, `borrower` (when meaning your registry), and `three role` — fix any remaining hits.*
+## CHAPTER 5 — Consumables Management Interface (replaces Inventory Management Interface Figs. 8–10)
+
+**Delete** the entire old block from “Inventory Management Interface” through “Navigate to related workflows” (borrowable `/inventory` write-up).
+
+**Paste this replacement:**
+
+```
+Consumables Management Interface
+
+For the current General Supplies Office pilot deployment, the system focuses on consumable school supplies only (e.g., bond paper, writing instruments, office and janitorial supplies). Borrowable equipment workflows (issue and return via /inventory and the QR scanner) are retained in the system design for future expansion but are excluded from the active navigation and demonstration scope until after defense. Day-to-day catalog and stock operations are handled entirely through the consumables module.
+
+ Figure 8. Consumables List Interface
+
+The consumables page (/consumables) lists all consumable items managed by the General Supplies Office. The interface uses a tabbed layout: Consumable items (or Catalog for Faculty and Staff requesters) and Release log (Admin and Custodian only). Faculty and Staff users browse the catalog read-only and submit purchase requests from this page; GSO Officers, Administrators, and Custodians manage the catalog and view release history.
+
+Table columns (Consumable items / Catalog tab):
+•	Item name (link to detail at /consumables/[id])
+•	Category
+•	Current stock (computed from transaction history)
+•	Reorder level
+•	QR code quick view (operational roles only)
+•	Actions: view detail, show QR; Request button for Faculty and Staff (delete control disabled in UI per panel recommendation)
+
+Visual indicators:
+•	Stock badges (normal vs. low stock / destructive styling when currentStock ≤ reorderLevel)
+
+Release log tab (Admin and Custodian):
+•	Paginated list of consumable OUT (release) transactions
+•	Columns: item name, quantity, released-to requester (name, ID number, person type, department), recorded by, date and time
+
+ Figure 9. Add / Edit Consumable Form
+
+Routes: /consumables/new (create) and edit via item detail actions on /consumables/[id].
+
+Access: Administrator, Custodian, and GSO Officer (GSO Officers may add and edit consumables only).
+
+Form fields:
+•	Name (required)
+•	Description (optional)
+•	Category (required, select from GSO supply categories such as Office Supplies, Paper & Documentation, Writing Instruments, Cleaning & Janitorial Supplies, and IT & Electrical Supplies)
+•	Reorder level (numeric, default 10)
+•	Inventory type fixed to Consumable (not shown when creating from the consumables module)
+
+On create:
+•	Item saved as CONSUMABLE under the General Supplies Office scope
+•	Unique QR value auto-generated: INV-{itemId}
+•	Initial stock recorded through receive (IN) transactions on the Transactions page or during seed setup
+•	Audit log entry: CREATE_ITEM
+
+ Figure 10. Consumable Item Detail Page
+
+Route: /consumables/[id]
+
+Sections:
+1. Item information — category, current stock, reorder level, status badge (In Stock / Low Stock)
+2. Release history (Admin, Custodian, GSO Officer, Auditor) — transaction type (Received / Released), quantity, released-to requester, user who recorded the movement, date; Faculty and Staff see a simplified stock status panel instead of full release history
+3. QR code panel (operational roles only) — rendered PNG, download button, encoded value display; hidden for Faculty and Staff requester view
+
+Item detail actions (Administrator, Custodian, and GSO Officer):
+•	Edit item metadata
+•	Faculty and Staff: Request this item button opens the consumable purchase request dialog (quantity, notes, justification) linked to the logged-in requester profile
+
+Sample consumable categories seeded for demonstration: Office Supplies; Paper & Documentation; Writing Instruments; Cleaning & Janitorial Supplies; IT & Electrical Supplies. Sample items include bond paper, ballpoint pens, folders, disinfectant spray, and USB flash drives, each with opening stock via IN transactions.
+```
+
+### Optional one-sentence scope note (paste into Ch.1 Scope or Limitations if not already stated):
+
+```
+The pilot deployment and system demonstration emphasize consumable school supplies; borrowable inventory and QR scanner navigation are deferred to a future rollout phase after institutional review.
+```
+
+---
+
+*After pasting all blocks, run Find for: `student`, `Student`, `4.89`, `Program / section`, `borrower` (when meaning your registry), `three role`, `/inventory` (when describing active demo scope), and `borrowable` (verify pilot vs future tense) — fix any remaining hits.*

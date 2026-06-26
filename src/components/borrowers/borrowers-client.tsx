@@ -1,15 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createBorrowerSchema, type CreateBorrowerInput } from "@/lib/validations";
-import {
-  createBorrower,
-  updateBorrower,
-  // deleteBorrower,
-} from "@/server/borrowers";
+import { getBorrowersPaginated, createBorrower, updateBorrower } from "@/server/borrowers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +26,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Pencil, /* Trash2, */ Loader2, Users } from "lucide-react";
+import { Plus, Pencil, /* Trash2, */ Loader2, Users, Search } from "lucide-react";
+import { Pagination } from "@/components/layout/pagination";
 import { useSession } from "next-auth/react";
 import { PERSON_TYPE_LABELS, PERSON_TYPES } from "@/lib/constants";
 import type { PersonTypeName } from "@/lib/constants";
@@ -45,16 +42,70 @@ interface Borrower {
   contactPhone: string | null;
 }
 
-export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrower[] }) {
+export function BorrowersClient() {
   const router = useRouter();
   const { data: session } = useSession();
+  const [borrowers, setBorrowers] = useState<Borrower[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Borrower | null>(null);
   const isAdmin = session?.user?.role === "Admin";
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  const loadData = useCallback(
+    async (p: number) => {
+      setIsLoading(true);
+      try {
+        const result = await getBorrowersPaginated({
+          page: p,
+          search: debouncedSearch || undefined,
+        });
+        setBorrowers(result.borrowers);
+        setTotal(result.total);
+        setTotalPages(result.totalPages);
+        setPage(result.page);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [debouncedSearch]
+  );
+
+  useEffect(() => {
+    void loadData(page);
+  }, [debouncedSearch, page, loadData]);
+
+  function refreshList() {
+    void loadData(page);
+    router.refresh();
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-md flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search by name, ID, department..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger
             render={
@@ -76,21 +127,36 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                 await createBorrower(data);
                 toast.success("Requester registered");
                 setIsCreateOpen(false);
-                router.refresh();
+                refreshList();
               }}
             />
           </DialogContent>
         </Dialog>
       </div>
 
-      {initialBorrowers.length === 0 ? (
+      {isLoading && borrowers.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : borrowers.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="h-12 w-12 text-muted-foreground/50" />
-            <p className="mt-4 text-muted-foreground">No requesters registered yet</p>
+            <p className="mt-4 text-muted-foreground">
+              {debouncedSearch
+                ? "No requesters match your search"
+                : "No requesters registered yet"}
+            </p>
           </CardContent>
         </Card>
       ) : (
+        <>
+          {total > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {total} requester{total === 1 ? "" : "s"}
+              {debouncedSearch ? ` matching "${debouncedSearch}"` : ""}
+            </p>
+          )}
         <div className="rounded-md border">
           <table className="w-full text-sm">
             <thead>
@@ -105,7 +171,7 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
               </tr>
             </thead>
             <tbody>
-              {initialBorrowers.map((b) => (
+              {borrowers.map((b) => (
                 <tr key={b.id} className="border-b last:border-0">
                   <td className="p-3 font-medium">{b.fullName}</td>
                   <td className="p-3 text-muted-foreground">{b.idNumber}</td>
@@ -152,7 +218,7 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
                               await updateBorrower(b.id, data);
                               toast.success("Requester updated");
                               setEditing(null);
-                              router.refresh();
+                              refreshList();
                             }}
                           />
                         </DialogContent>
@@ -186,6 +252,8 @@ export function BorrowersClient({ initialBorrowers }: { initialBorrowers: Borrow
             </tbody>
           </table>
         </div>
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       )}
     </div>
   );

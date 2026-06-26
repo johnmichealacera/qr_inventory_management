@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { canManageConsumables, canSubmitConsumableRequest, canViewConsumables, canViewReleaseLog } from "@/lib/roles";
+import {
+  canManageConsumables,
+  canSubmitConsumableRequest,
+  canViewConsumables,
+  canViewReleaseLog,
+} from "@/lib/roles";
 import { redirect } from "next/navigation";
-import { getItems, getItemStock } from "@/server/items";
-import { INVENTORY_TYPES } from "@/lib/constants";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConsumablesClient } from "@/components/consumables/consumables-client";
 import { Button } from "@/components/ui/button";
@@ -20,15 +23,6 @@ export default async function ConsumablesPage() {
   const canAddConsumables = canManageConsumables(role);
   const canViewReleases = canViewReleaseLog(role);
   const canRequest = canSubmitConsumableRequest(role);
-
-  const items = await getItems(undefined, undefined, INVENTORY_TYPES.CONSUMABLE);
-
-  const itemsWithStock = await Promise.all(
-    items.map(async (item) => ({
-      ...item,
-      currentStock: await getItemStock(item.id),
-    }))
-  );
 
   return (
     <div className="space-y-6">
@@ -51,7 +45,6 @@ export default async function ConsumablesPage() {
       </PageHeader>
 
       <ConsumablesClient
-        items={itemsWithStock}
         canAddConsumables={canAddConsumables}
         canViewReleaseLog={canViewReleases}
         canManageItems={canAddConsumables}

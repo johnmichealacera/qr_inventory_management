@@ -4,7 +4,12 @@ import { db } from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
 import { requireAuth, requireRole } from "@/lib/auth";
 import { createItemSchema, updateItemSchema } from "@/lib/validations";
-import { EQUIPMENT_PROGRAM_CRIMINOLOGY, INVENTORY_TYPES, ROLES } from "@/lib/constants";
+import {
+  EQUIPMENT_PROGRAM_CRIMINOLOGY,
+  INVENTORY_TYPES,
+  PAGE_SIZE,
+  ROLES,
+} from "@/lib/constants";
 import type { InventoryTypeName } from "@/lib/constants";
 import { canManageConsumables, canManageInventory } from "@/lib/roles";
 import { revalidatePath } from "next/cache";
@@ -43,6 +48,60 @@ export async function getItems(
     },
     orderBy: { createdAt: "desc" },
   });
+}
+
+export async function getItemsPaginated(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  categoryId?: string;
+  inventoryType?: InventoryTypeName;
+}) {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? PAGE_SIZE;
+  const skip = (page - 1) * limit;
+
+  const where: Record<string, unknown> = {
+    equipmentProgram: EQUIPMENT_PROGRAM_CRIMINOLOGY,
+  };
+
+  if (params?.inventoryType) {
+    where.inventoryType = params.inventoryType;
+  }
+
+  const search = params?.search?.trim();
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  if (params?.categoryId) {
+    where.categoryId = params.categoryId;
+  }
+
+  const [items, total] = await Promise.all([
+    db.item.findMany({
+      where,
+      include: {
+        category: true,
+        qrCode: true,
+        _count: { select: { transactions: true } },
+      },
+      orderBy: { name: "asc" },
+      skip,
+      take: limit,
+    }),
+    db.item.count({ where }),
+  ]);
+
+  return {
+    items,
+    total,
+    page,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  };
 }
 
 export async function getItemById(id: string) {
