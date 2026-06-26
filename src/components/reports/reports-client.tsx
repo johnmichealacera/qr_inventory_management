@@ -35,6 +35,7 @@ import {
   INVENTORY_TYPE_LABELS,
   formatRequesterLine,
 } from "@/lib/constants";
+import { BORROWABLE_INVENTORY_ENABLED } from "@/lib/features";
 import { mapSelectItems } from "@/lib/select-items";
 import { Download, Filter, Loader2, X } from "lucide-react";
 
@@ -98,6 +99,7 @@ export function ReportsClient() {
     if (type) p.set("type", type);
     if (borrowerId) p.set("borrowerId", borrowerId);
     if (inventoryType) p.set("inventoryType", inventoryType);
+    else if (!BORROWABLE_INVENTORY_ENABLED) p.set("inventoryType", INVENTORY_TYPES.CONSUMABLE);
     const q = p.toString();
     return q ? `/api/reports/export?${q}` : "/api/reports/export";
   }, [startDate, endDate, itemId, type, borrowerId, inventoryType]);
@@ -108,11 +110,17 @@ export function ReportsClient() {
   );
 
   const transactionTypeItems = useMemo(
-    () => [
-      { value: "IN", label: "Received (IN)" },
-      { value: "OUT", label: "Issued (OUT)" },
-      { value: "RETURN", label: "Returned" },
-    ],
+    () =>
+      BORROWABLE_INVENTORY_ENABLED
+        ? [
+            { value: "IN", label: "Received (IN)" },
+            { value: "OUT", label: "Issued (OUT)" },
+            { value: "RETURN", label: "Returned" },
+          ]
+        : [
+            { value: "IN", label: "Received (IN)" },
+            { value: "OUT", label: "Released (OUT)" },
+          ],
     []
   );
 
@@ -144,7 +152,9 @@ export function ReportsClient() {
         itemId: itemId || undefined,
         type: type || undefined,
         borrowerId: borrowerId || undefined,
-        inventoryType: inventoryType || undefined,
+        inventoryType:
+          inventoryType ||
+          (BORROWABLE_INVENTORY_ENABLED ? undefined : INVENTORY_TYPES.CONSUMABLE),
       });
       setTransactions(result.transactions);
       setTotalPages(result.totalPages);
@@ -157,7 +167,11 @@ export function ReportsClient() {
 
   useEffect(() => {
     void loadData();
-    void getItems().then((all) => setItems(all.map((i) => ({ id: i.id, name: i.name }))));
+    void getItems(
+      undefined,
+      undefined,
+      BORROWABLE_INVENTORY_ENABLED ? undefined : INVENTORY_TYPES.CONSUMABLE
+    ).then((all) => setItems(all.map((i) => ({ id: i.id, name: i.name }))));
     void getBorrowers().then(setBorrowers);
   }, []);
 
@@ -232,12 +246,17 @@ export function ReportsClient() {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
+                  {BORROWABLE_INVENTORY_ENABLED && (
+                    <SelectItem value="RETURN">Returned</SelectItem>
+                  )}
                   <SelectItem value="IN">Received (IN)</SelectItem>
-                  <SelectItem value="OUT">Issued (OUT)</SelectItem>
-                  <SelectItem value="RETURN">Returned</SelectItem>
+                  <SelectItem value="OUT">
+                    {BORROWABLE_INVENTORY_ENABLED ? "Issued (OUT)" : "Released (OUT)"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {BORROWABLE_INVENTORY_ENABLED && (
             <div className="space-y-2">
               <Label>Inventory type</Label>
               <Select
@@ -261,6 +280,7 @@ export function ReportsClient() {
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="space-y-2">
               <Label>Requester</Label>
               <Select

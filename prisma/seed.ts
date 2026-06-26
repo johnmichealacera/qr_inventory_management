@@ -76,7 +76,7 @@ async function main() {
       where: { id: existingStaffUser.id },
       data: {
         username: "custodian",
-        name: "Equipment Custodian",
+        name: "GSO Supplies Custodian",
         roleId: custodianRole.id,
       },
     });
@@ -90,7 +90,7 @@ async function main() {
     where: { username: "custodian" },
     update: { roleId: custodianRole.id },
     create: {
-      name: "Equipment Custodian",
+      name: "GSO Supplies Custodian",
       username: "custodian",
       password: hashedPassword,
       roleId: custodianRole.id,
@@ -114,11 +114,53 @@ async function main() {
     auditor: auditor.username,
   });
 
-  const categories = [
+  const legacyCategoryNames = [
     "Criminology — Uniforms & Gear",
     "Criminology — Training Equipment",
     "Criminology — Forensic Supplies",
     "Criminology — Documentation",
+  ];
+
+  const legacyCategories = await prisma.category.findMany({
+    where: { name: { in: legacyCategoryNames } },
+    select: { id: true },
+  });
+  const legacyCategoryIds = legacyCategories.map((c) => c.id);
+
+  if (legacyCategoryIds.length > 0) {
+    const legacyItems = await prisma.item.findMany({
+      where: { categoryId: { in: legacyCategoryIds } },
+      select: { id: true },
+    });
+    const legacyItemIds = legacyItems.map((i) => i.id);
+    if (legacyItemIds.length > 0) {
+      await prisma.transaction.deleteMany({ where: { itemId: { in: legacyItemIds } } });
+      await prisma.qRCode.deleteMany({ where: { itemId: { in: legacyItemIds } } });
+      await prisma.item.deleteMany({ where: { id: { in: legacyItemIds } } });
+      console.log(`Removed ${legacyItemIds.length} legacy catalog item(s)`);
+    }
+    await prisma.category.deleteMany({ where: { id: { in: legacyCategoryIds } } });
+    console.log("Removed legacy Criminology categories");
+  }
+
+  const borrowableItems = await prisma.item.findMany({
+    where: { inventoryType: "BORROWABLE" },
+    select: { id: true },
+  });
+  if (borrowableItems.length > 0) {
+    const borrowableIds = borrowableItems.map((i) => i.id);
+    await prisma.transaction.deleteMany({ where: { itemId: { in: borrowableIds } } });
+    await prisma.qRCode.deleteMany({ where: { itemId: { in: borrowableIds } } });
+    await prisma.item.deleteMany({ where: { id: { in: borrowableIds } } });
+    console.log(`Removed ${borrowableIds.length} borrowable item(s) from seed cleanup`);
+  }
+
+  const categories = [
+    "Office Supplies",
+    "Paper & Documentation",
+    "Writing Instruments",
+    "Cleaning & Janitorial Supplies",
+    "IT & Electrical Supplies",
   ];
 
   for (const name of categories) {
@@ -131,48 +173,142 @@ async function main() {
 
   console.log("Categories:", categories);
 
-  const uniformCat = await prisma.category.findUnique({
-    where: { name: "Criminology — Uniforms & Gear" },
+  const officeCat = await prisma.category.findUnique({ where: { name: "Office Supplies" } });
+  const paperCat = await prisma.category.findUnique({
+    where: { name: "Paper & Documentation" },
   });
-  const trainingCat = await prisma.category.findUnique({
-    where: { name: "Criminology — Training Equipment" },
+  const writingCat = await prisma.category.findUnique({
+    where: { name: "Writing Instruments" },
   });
-  const forensicCat = await prisma.category.findUnique({
-    where: { name: "Criminology — Forensic Supplies" },
+  const cleaningCat = await prisma.category.findUnique({
+    where: { name: "Cleaning & Janitorial Supplies" },
+  });
+  const itCat = await prisma.category.findUnique({
+    where: { name: "IT & Electrical Supplies" },
   });
 
-  if (uniformCat && trainingCat && forensicCat) {
-    const sampleItems = [
+  if (officeCat && paperCat && writingCat && cleaningCat && itCat) {
+    const consumableItems = [
       {
-        name: "Tactical belt (standard issue)",
-        description: "College of Criminology equipment room",
-        categoryId: uniformCat.id,
+        name: "Bond paper (A4, 80gsm, ream)",
+        description: "Standard copy paper for offices and faculty rooms",
+        categoryId: paperCat.id,
+        reorderLevel: 40,
+        initialStock: 120,
+      },
+      {
+        name: "Long bond paper (8.5×13, ream)",
+        description: "Legal-size paper for official forms",
+        categoryId: paperCat.id,
+        reorderLevel: 20,
+        initialStock: 60,
+      },
+      {
+        name: "Document envelope (A4, brown)",
+        description: "For routing internal and external mail",
+        categoryId: paperCat.id,
+        reorderLevel: 200,
+        initialStock: 500,
+      },
+      {
+        name: "Ballpoint pen (black, box of 12)",
+        description: "Standard issue writing pen",
+        categoryId: writingCat.id,
         reorderLevel: 15,
-        inventoryType: "BORROWABLE" as const,
+        initialStock: 48,
       },
       {
-        name: "Evidence collection kit",
-        description: "Sealed consumables for lab practicum",
-        categoryId: forensicCat.id,
+        name: "Whiteboard marker (assorted, set of 4)",
+        description: "For classrooms and meeting rooms",
+        categoryId: writingCat.id,
+        reorderLevel: 10,
+        initialStock: 24,
+      },
+      {
+        name: "Correction tape",
+        description: "Office correction supply",
+        categoryId: writingCat.id,
+        reorderLevel: 12,
+        initialStock: 30,
+      },
+      {
+        name: "Stapler staples (standard, box)",
+        description: "Refill staples for desk staplers",
+        categoryId: officeCat.id,
+        reorderLevel: 10,
+        initialStock: 25,
+      },
+      {
+        name: "Paper clips (box)",
+        description: "Metal clips for document bundling",
+        categoryId: officeCat.id,
         reorderLevel: 8,
-        inventoryType: "CONSUMABLE" as const,
+        initialStock: 20,
       },
       {
-        name: "Handcuff training set (practice)",
-        description: "Drill hall issuance",
-        categoryId: trainingCat.id,
+        name: "Plastic folder (long, clear)",
+        description: "Document storage for faculty and staff",
+        categoryId: officeCat.id,
+        reorderLevel: 30,
+        initialStock: 80,
+      },
+      {
+        name: "Glue stick",
+        description: "General office adhesive",
+        categoryId: officeCat.id,
+        reorderLevel: 15,
+        initialStock: 36,
+      },
+      {
+        name: "Disinfectant spray (500ml)",
+        description: "Surface cleaning for offices and stockroom",
+        categoryId: cleaningCat.id,
         reorderLevel: 6,
-        inventoryType: "BORROWABLE" as const,
+        initialStock: 18,
+      },
+      {
+        name: "Trash bags (large, roll)",
+        description: "Janitorial waste bags",
+        categoryId: cleaningCat.id,
+        reorderLevel: 5,
+        initialStock: 12,
+      },
+      {
+        name: "Hand soap refill (liquid)",
+        description: "Restroom and pantry dispensers",
+        categoryId: cleaningCat.id,
+        reorderLevel: 8,
+        initialStock: 20,
+      },
+      {
+        name: "USB flash drive (32GB)",
+        description: "For file transfer and backup",
+        categoryId: itCat.id,
+        reorderLevel: 5,
+        initialStock: 15,
+      },
+      {
+        name: "HDMI cable (6ft)",
+        description: "For projectors and displays",
+        categoryId: itCat.id,
+        reorderLevel: 4,
+        initialStock: 10,
       },
     ];
 
-    for (const itemData of sampleItems) {
+    for (const itemData of consumableItems) {
       const existing = await prisma.item.findFirst({
         where: { name: itemData.name },
       });
 
       if (!existing) {
-        const item = await prisma.item.create({ data: itemData });
+        const { initialStock, ...createData } = itemData;
+        const item = await prisma.item.create({
+          data: {
+            ...createData,
+            inventoryType: "CONSUMABLE",
+          },
+        });
 
         await prisma.qRCode.create({
           data: {
@@ -186,12 +322,12 @@ async function main() {
             itemId: item.id,
             userId: admin.id,
             type: "IN",
-            quantity: 50,
+            quantity: initialStock,
             notes: "Initial stock (seed)",
           },
         });
 
-        console.log(`Created item: ${item.name}`);
+        console.log(`Created consumable: ${item.name} (stock: ${initialStock})`);
       }
     }
   }

@@ -33,6 +33,7 @@ import {
   INVENTORY_TYPES,
   formatRequesterLine,
 } from "@/lib/constants";
+import { BORROWABLE_INVENTORY_ENABLED } from "@/lib/features";
 import type { InventoryTypeName } from "@/lib/constants";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
@@ -93,8 +94,18 @@ export function TransactionsClient() {
     setIsLoading(true);
     try {
       const [txResult, allItems, allBorrowers] = await Promise.all([
-        getTransactions({ page: p, limit: 20 }),
-        getItems(),
+        getTransactions({
+          page: p,
+          limit: 20,
+          inventoryType: BORROWABLE_INVENTORY_ENABLED
+            ? undefined
+            : INVENTORY_TYPES.CONSUMABLE,
+        }),
+        getItems(
+          undefined,
+          undefined,
+          BORROWABLE_INVENTORY_ENABLED ? undefined : INVENTORY_TYPES.CONSUMABLE
+        ),
         getBorrowers(),
       ]);
       setTransactions(txResult.transactions);

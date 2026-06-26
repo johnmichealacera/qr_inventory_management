@@ -28,6 +28,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ROLES } from "@/lib/constants";
+import { BORROWABLE_INVENTORY_ENABLED } from "@/lib/features";
 
 type NavItem = {
   name: string;
@@ -115,9 +116,15 @@ export function Sidebar() {
 
   const userRole = session?.user?.role;
 
-  const filteredNav = navigation.filter(
-    (item) => !item.roles || (userRole && item.roles.includes(userRole))
-  );
+  const filteredNav = navigation.filter((item) => {
+    if (
+      !BORROWABLE_INVENTORY_ENABLED &&
+      (item.href === "/inventory" || item.href === "/scan")
+    ) {
+      return false;
+    }
+    return !item.roles || (userRole && item.roles.includes(userRole));
+  });
 
   return (
     <>

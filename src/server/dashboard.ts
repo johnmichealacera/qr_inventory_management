@@ -1,14 +1,27 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { INVENTORY_TYPES } from "@/lib/constants";
+import { BORROWABLE_INVENTORY_ENABLED } from "@/lib/features";
 import { getItemStock } from "@/server/items";
 
 export async function getDashboardStats() {
+  const itemFilter = BORROWABLE_INVENTORY_ENABLED
+    ? {}
+    : { inventoryType: INVENTORY_TYPES.CONSUMABLE };
+
   const [totalItems, totalTransactions, recentTransactions, items] =
     await Promise.all([
-      db.item.count(),
-      db.transaction.count(),
+      db.item.count({ where: itemFilter }),
+      db.transaction.count({
+        where: BORROWABLE_INVENTORY_ENABLED
+          ? undefined
+          : { item: { inventoryType: INVENTORY_TYPES.CONSUMABLE } },
+      }),
       db.transaction.findMany({
+        where: BORROWABLE_INVENTORY_ENABLED
+          ? undefined
+          : { item: { inventoryType: INVENTORY_TYPES.CONSUMABLE } },
         include: {
           item: { select: { id: true, name: true } },
           user: { select: { id: true, name: true } },
@@ -26,6 +39,7 @@ export async function getDashboardStats() {
         take: 5,
       }),
       db.item.findMany({
+        where: itemFilter,
         select: { id: true, name: true, reorderLevel: true },
       }),
     ]);

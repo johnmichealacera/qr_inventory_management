@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 import { ROLES } from "@/lib/constants";
+import { BORROWABLE_INVENTORY_ENABLED, isBorrowableOnlyRoute } from "@/lib/features";
 
 const { auth } = NextAuth(authConfig);
 
@@ -50,6 +51,10 @@ export default auth((req) => {
   }
 
   if (isAuthenticated && isGsoOfficerRole(role) && !pathAllowed(GSO_OFFICER_PATHS, pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+  }
+
+  if (isAuthenticated && !BORROWABLE_INVENTORY_ENABLED && isBorrowableOnlyRoute(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 

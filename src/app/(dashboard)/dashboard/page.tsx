@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { canManageInventory, isGsoOfficerRole, isRequesterRole } from "@/lib/roles";
+import { BORROWABLE_INVENTORY_ENABLED } from "@/lib/features";
 import { getDashboardStats } from "@/server/dashboard";
 import { getMyRequestStats, getPendingRequestCountForReview } from "@/server/consumable-requests";
 import { PageHeader } from "@/components/layout/page-header";
@@ -48,7 +49,11 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Overview of your inventory system"
+        description={
+          BORROWABLE_INVENTORY_ENABLED
+            ? "Overview of your inventory system"
+            : "Overview of General Supplies Office consumables and requests"
+        }
       />
 
       {canManageInventory(role) && <CustodianRequestsAlert pendingCount={pendingRequests} />}
