@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { mapSelectItems } from "@/lib/select-items";
 import { Loader2 } from "lucide-react";
 
 interface Category {
@@ -61,6 +63,26 @@ export function ItemForm({
   });
 
   const inventoryType = watch("inventoryType");
+  const categoryId = watch("categoryId");
+
+  const inventoryTypeItems = useMemo(
+    () => [
+      {
+        value: INVENTORY_TYPES.BORROWABLE,
+        label: `${INVENTORY_TYPE_LABELS.BORROWABLE} — issued and returned`,
+      },
+      {
+        value: INVENTORY_TYPES.CONSUMABLE,
+        label: `${INVENTORY_TYPE_LABELS.CONSUMABLE} — released when used (not returned)`,
+      },
+    ],
+    []
+  );
+
+  const categoryItems = useMemo(
+    () => mapSelectItems(categories, (cat) => cat.id, (cat) => cat.name),
+    [categories]
+  );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -68,6 +90,7 @@ export function ItemForm({
         <div className="space-y-2">
           <Label>Inventory type</Label>
           <Select
+            items={inventoryTypeItems}
             value={inventoryType}
             onValueChange={(val) =>
               val &&
@@ -118,7 +141,8 @@ export function ItemForm({
       <div className="space-y-2">
         <Label htmlFor="categoryId">Category</Label>
         <Select
-          defaultValue={defaultValues?.categoryId}
+          items={categoryItems}
+          value={categoryId}
           onValueChange={(val) => setValue("categoryId", val ?? "")}
         >
           <SelectTrigger>

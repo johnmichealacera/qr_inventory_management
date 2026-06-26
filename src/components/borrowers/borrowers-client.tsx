@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -220,6 +220,14 @@ function BorrowerForm({
 
   const personType = watch("personType");
 
+  const personTypeItems = useMemo(
+    () => [
+      { value: PERSON_TYPES.STAFF, label: PERSON_TYPE_LABELS.STAFF },
+      { value: PERSON_TYPES.FACULTY, label: PERSON_TYPE_LABELS.FACULTY },
+    ],
+    []
+  );
+
   async function onFormSubmit(data: CreateBorrowerInput) {
     try {
       await onSubmit(data);
@@ -240,6 +248,7 @@ function BorrowerForm({
       <div className="space-y-2">
         <Label htmlFor="personType">Person type</Label>
         <Select
+          items={personTypeItems}
           value={personType}
           onValueChange={(val) =>
             val && setValue("personType", val as CreateBorrowerInput["personType"])

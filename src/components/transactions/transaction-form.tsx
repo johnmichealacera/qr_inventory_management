@@ -22,6 +22,7 @@ import {
   INVENTORY_TYPE_LABELS,
   formatRequesterLine,
 } from "@/lib/constants";
+import { mapSelectItems } from "@/lib/select-items";
 import type { InventoryTypeName } from "@/lib/constants";
 
 interface Item {
@@ -75,11 +76,50 @@ export function TransactionForm({
   );
   const isConsumable = selectedItem?.inventoryType === INVENTORY_TYPES.CONSUMABLE;
 
+  const itemSelectItems = useMemo(
+    () =>
+      mapSelectItems(
+        items,
+        (item) => item.id,
+        (item) =>
+          `${item.name} (${INVENTORY_TYPE_LABELS[item.inventoryType] ?? item.inventoryType})`
+      ),
+    [items]
+  );
+
+  const borrowerSelectItems = useMemo(
+    () =>
+      mapSelectItems(borrowers, (b) => b.id, (b) => formatRequesterLine(b)),
+    [borrowers]
+  );
+
+  const transactionTypeItems = useMemo(() => {
+    const options = [
+      { value: "IN", label: "Receive stock (IN)" },
+      {
+        value: "OUT",
+        label: isConsumable
+          ? "Release to requester (OUT)"
+          : "Issue to requester (OUT)",
+      },
+    ];
+    if (!isConsumable && selectedItem) {
+      options.push({ value: "RETURN", label: "Return from requester" });
+    } else if (!selectedItem) {
+      options.push({
+        value: "RETURN",
+        label: "Return from requester (borrowable only)",
+      });
+    }
+    return options;
+  }, [isConsumable, selectedItem]);
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label>Item</Label>
         <Select
+          items={itemSelectItems}
           defaultValue={defaultItemId}
           onValueChange={(val) => setValue("itemId", val ?? "")}
         >
@@ -102,7 +142,10 @@ export function TransactionForm({
 
       <div className="space-y-2">
         <Label>Transaction type</Label>
-        <Select onValueChange={(val) => val && setValue("type", val as "IN" | "OUT" | "RETURN")}>
+        <Select
+          items={transactionTypeItems}
+          onValueChange={(val) => val && setValue("type", val as "IN" | "OUT" | "RETURN")}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
@@ -135,6 +178,7 @@ export function TransactionForm({
         <div className="space-y-2">
           <Label>Requester</Label>
           <Select
+            items={borrowerSelectItems}
             onValueChange={(val) =>
               setValue("borrowerId", typeof val === "string" ? val : "")
             }

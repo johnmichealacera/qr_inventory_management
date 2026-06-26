@@ -24,6 +24,7 @@ import {
   INVENTORY_TYPE_LABELS,
   formatRequesterLine,
 } from "@/lib/constants";
+import { mapSelectItems } from "@/lib/select-items";
 import type { InventoryTypeName } from "@/lib/constants";
 
 interface ScannedItem {
@@ -103,6 +104,12 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
   useEffect(() => {
     getBorrowers().then(setBorrowers).catch(() => setBorrowers([]));
   }, []);
+
+  const borrowerSelectItems = useMemo(
+    () =>
+      mapSelectItems(borrowers, (b) => b.id, (b) => formatRequesterLine(b)),
+    [borrowers]
+  );
 
   useEffect(() => {
     setSelectedType(null);
@@ -196,7 +203,11 @@ export function ScanResult({ item, onClear }: ScanResultProps) {
             {(selectedType === "OUT" || selectedType === "RETURN") && (
               <div className="space-y-2">
                 <Label>Requester</Label>
-                <Select value={borrowerId} onValueChange={(val) => setBorrowerId(val ?? "")}>
+                <Select
+                  items={borrowerSelectItems}
+                  value={borrowerId}
+                  onValueChange={(val) => setBorrowerId(val ?? "")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select registered requester" />
                   </SelectTrigger>

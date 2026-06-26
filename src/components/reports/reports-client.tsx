@@ -35,6 +35,7 @@ import {
   INVENTORY_TYPE_LABELS,
   formatRequesterLine,
 } from "@/lib/constants";
+import { mapSelectItems } from "@/lib/select-items";
 import { Download, Filter, Loader2, X } from "lucide-react";
 
 interface Transaction {
@@ -100,6 +101,37 @@ export function ReportsClient() {
     const q = p.toString();
     return q ? `/api/reports/export?${q}` : "/api/reports/export";
   }, [startDate, endDate, itemId, type, borrowerId, inventoryType]);
+
+  const itemSelectItems = useMemo(
+    () => mapSelectItems(items, (item) => item.id, (item) => item.name),
+    [items]
+  );
+
+  const transactionTypeItems = useMemo(
+    () => [
+      { value: "IN", label: "Received (IN)" },
+      { value: "OUT", label: "Issued (OUT)" },
+      { value: "RETURN", label: "Returned" },
+    ],
+    []
+  );
+
+  const inventoryTypeItems = useMemo(
+    () => [
+      { value: "__all__", label: "All inventory types" },
+      { value: INVENTORY_TYPES.BORROWABLE, label: INVENTORY_TYPE_LABELS.BORROWABLE },
+      { value: INVENTORY_TYPES.CONSUMABLE, label: INVENTORY_TYPE_LABELS.CONSUMABLE },
+    ],
+    []
+  );
+
+  const requesterSelectItems = useMemo(
+    () => [
+      { value: "__all__", label: "All requesters" },
+      ...mapSelectItems(borrowers, (b) => b.id, (b) => formatRequesterLine(b)),
+    ],
+    [borrowers]
+  );
 
   async function loadData(p: number = 1) {
     setIsLoading(true);
@@ -172,7 +204,11 @@ export function ReportsClient() {
             </div>
             <div className="space-y-2">
               <Label>Item</Label>
-              <Select value={itemId} onValueChange={(val) => setItemId(val ?? "")}>
+              <Select
+                items={itemSelectItems}
+                value={itemId}
+                onValueChange={(val) => setItemId(val ?? "")}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All items" />
                 </SelectTrigger>
@@ -187,7 +223,11 @@ export function ReportsClient() {
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={type} onValueChange={(val) => setType(val ?? "")}>
+              <Select
+                items={transactionTypeItems}
+                value={type}
+                onValueChange={(val) => setType(val ?? "")}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
@@ -201,6 +241,7 @@ export function ReportsClient() {
             <div className="space-y-2">
               <Label>Inventory type</Label>
               <Select
+                items={inventoryTypeItems}
                 value={inventoryType || "__all__"}
                 onValueChange={(val) =>
                   setInventoryType(val === "__all__" ? "" : (val ?? ""))
@@ -223,6 +264,7 @@ export function ReportsClient() {
             <div className="space-y-2">
               <Label>Requester</Label>
               <Select
+                items={requesterSelectItems}
                 value={borrowerId || "__all__"}
                 onValueChange={(val) => setBorrowerId(val === "__all__" ? "" : (val ?? ""))}
               >

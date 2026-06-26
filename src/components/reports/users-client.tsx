@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { mapSelectItems } from "@/lib/select-items";
 import { toast } from "sonner";
 import { Plus, /* Trash2, */ Loader2 } from "lucide-react";
 
@@ -190,6 +191,8 @@ function CreateUserForm({
     resolver: zodResolver(createUserSchema),
   });
 
+  const roleItems = mapSelectItems(roles, (role) => role.id, (role) => role.name);
+
   async function onSubmit(data: CreateUserInput) {
     try {
       await createUser(data);
@@ -233,7 +236,10 @@ function CreateUserForm({
 
       <div className="space-y-2">
         <Label>Role</Label>
-        <Select onValueChange={(val: string | null) => setValue("roleId", val ?? "")}>
+        <Select
+          items={roleItems}
+          onValueChange={(val: string | null) => setValue("roleId", val ?? "")}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>
